@@ -340,9 +340,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0643ac8cd5ffe54d8701669c0948cbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _numBlockPreFab: {fileID: 8520547474587665512, guid: 6bc51f0378a760241b1832a4d36b9326, type: 3}
   _gridScale: 10
-  _Numblock: {fileID: 8520547474587665512, guid: 6bc51f0378a760241b1832a4d36b9326, type: 3}
   _gridSize: 4
+  _blockMoveSpeed: 20
+  _blockScreenLayer: -1
   _allBlocksList: []
   _emptySpaces: 16
 --- !u!4 &1778753059

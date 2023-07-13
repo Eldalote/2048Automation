@@ -25,7 +25,7 @@ public class InputManager : MonoBehaviour
 
         if (_inputQueList.Count > 0)
         {
-            NumBlocksManager.ResultCode result = NumBlocksManager.GiveInput(_inputQueList[0]);
+            NumBlocksManager.ResultCode result = NumBlocksManager.GiveMoveInput(_inputQueList[0]);
             if (result == NumBlocksManager.ResultCode.GameOver) 
             {
                 Debug.Log("Game over has been reported, action needed in Inputmanager.");
