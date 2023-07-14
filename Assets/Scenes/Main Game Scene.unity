@@ -293,8 +293,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6fde380d640fe04bafe7604bca907d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NumBlocksManager: {fileID: 1778753058}
-  _inputQueList: 
   _AutomatedMode: 0
 --- !u!4 &1709968585
 Transform:
@@ -323,7 +321,7 @@ GameObject:
   - component: {fileID: 1778753058}
   m_Layer: 0
   m_Name: NumBlockManager
-  m_TagString: Untagged
+  m_TagString: NumBlockManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -343,7 +341,7 @@ MonoBehaviour:
   _numBlockPreFab: {fileID: 8520547474587665512, guid: 6bc51f0378a760241b1832a4d36b9326, type: 3}
   _gridScale: 10
   _gridSize: 4
-  _blockMoveSpeed: 20
+  _blockMoveSpeed: 5
   _blockScreenLayer: -1
   _allBlocksList: []
   _emptySpaces: 16

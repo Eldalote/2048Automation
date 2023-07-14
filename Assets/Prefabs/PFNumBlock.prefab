@@ -98,10 +98,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2f974ded26e14f41a7b968d589a2f0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _value: 0
-  _spriteRenderer: {fileID: 1506043392405420343}
-  _location: {x: 0, y: 0}
   _textMeshPro: {fileID: 1522637871356834860}
+  _value: 0
+  _gridLocation: {x: 0, y: 0}
+  _moveSpeed: 25
+  _key: 0
 --- !u!1 &3693052628929635796
 GameObject:
   m_ObjectHideFlags: 0
@@ -115,7 +116,7 @@ GameObject:
   - component: {fileID: 1522637871356834860}
   m_Layer: 0
   m_Name: Text (TMP)
-  m_TagString: Untagged
+  m_TagString: TextOnBlock
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

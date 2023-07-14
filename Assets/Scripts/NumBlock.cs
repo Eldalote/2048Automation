@@ -7,13 +7,13 @@ using UnityEngine;
 public class NumBlock : MonoBehaviour
 {
     // Unity parts attached to the NumBlock.
-    [SerializeField] private SpriteRenderer _spriteRenderer;
+    private SpriteRenderer _spriteRenderer;
     [SerializeField] private TextMeshPro _textMeshPro;
-
+    
     // Variables.
     [SerializeField] private int _value;    
     [SerializeField] private Vector2Int _gridLocation;        
-    [SerializeField] private int _movespeed = 25;
+    [SerializeField] private int _moveSpeed = 25;
     private int _gridScale;
     [SerializeField] private int _key;
     private int _screenLayer = -1;
@@ -27,6 +27,11 @@ public class NumBlock : MonoBehaviour
     private NumBlock _mergeTarget;
     private NumBlocksManager _managerParent;
 
+    // Awake function. Attached SpriteRenderer and TextMeshPro are referenced here.
+    private void Awake()
+    {
+        _spriteRenderer = GetComponent<SpriteRenderer>();       
+    }
     // Since the constructor cannot be used due to unity thingies, I use the Initialize function as a sort of constructor.
     public void Initialize(int value, Vector2Int gridlocation, int key, int gridscale, int movespeed, int screenLayer, NumBlocksManager parent)
     {
@@ -34,7 +39,7 @@ public class NumBlock : MonoBehaviour
         _gridLocation = gridlocation;
         _key = key;
         _gridScale = gridscale;
-        _movespeed = movespeed;
+        _moveSpeed = movespeed;
         _screenLayer = screenLayer;
         _managerParent = parent;
         // Call functions to display correct colour and text.
@@ -175,7 +180,6 @@ public class NumBlock : MonoBehaviour
     // Function to update the location of the block on the screen. It moves the block to the correct grid location. This function is called in the update method.
     private void UpdateScreenLocation()
     {
-        // TODO Overshoot prevention!
         // Calculate the screen location the block must move to by multiplying the grid location by the gridscale. 
         Vector3 screenLocationToBe = new Vector3(_gridLocation.x * _gridScale, _gridLocation.y * _gridScale, _screenLayer);
         // Calculate the direction the block must move to by calculating the difference between location it should be at, and where it is.
@@ -198,9 +202,21 @@ public class NumBlock : MonoBehaviour
         {
             // If we are not very close yet, first normalize the movement vector. This sets the length to 1. If we don't do this the move speed would
             // decrease as we get closer to the destination.
-            differenceInLocation.Normalize();
-            // Add the movement vector, corrected for frame time, gridscale, and movespeed, to the current position.
-            transform.position = transform.position + (differenceInLocation * Time.deltaTime * _gridScale * _movespeed);
+            Vector3 movementVector = differenceInLocation;
+            movementVector.Normalize();
+            // Multiply the movementvector by the moveSpeed, the gridScale, and the frame time. Multiplying by the frametime makes the movespeed independant of FPS.
+            movementVector = movementVector * Time.deltaTime * _gridScale * _moveSpeed;
+            // Check if the length of the movement vector is greater than the length of the difference vector. If it is, that will result in overshoot,
+            // so to stop overshoot the location will be set to the destination instead.
+            if (movementVector.sqrMagnitude > differenceInLocation.sqrMagnitude )
+            {
+                transform.position = screenLocationToBe;
+            }
+            // If there will be no overshoot, move in the direction of the destination.
+            else
+            {
+                transform.position = transform.position + movementVector;
+            }            
             // Unsure if this is still needed, but since we are moving, set the flag to false.
             _atDestination = false;
         }        
