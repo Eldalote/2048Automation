@@ -341,7 +341,7 @@ MonoBehaviour:
   _numBlockPreFab: {fileID: 8520547474587665512, guid: 6bc51f0378a760241b1832a4d36b9326, type: 3}
   _gridScale: 10
   _gridSize: 4
-  _blockMoveSpeed: 5
+  _blockMoveSpeed: 52
   _blockScreenLayer: -1
   _allBlocksList: []
   _emptySpaces: 16

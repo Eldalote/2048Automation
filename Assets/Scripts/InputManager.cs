@@ -62,13 +62,14 @@ public class InputManager : MonoBehaviour
         
 
         if (_sendCommand)
-        {
-            NumBlocksManager.ResultCode result = _numBlocksManager.GiveMoveInput(_commandToSend);
-            if (result == NumBlocksManager.ResultCode.GameOver) 
+        {            
+            if (_numBlocksManager.GetGameOverStatus()) 
             {
                 Debug.Log("Game over has been reported, action needed in Inputmanager.");
+                _sendCommand = false;
                 return;
             }
+            NumBlocksManager.ResultCode result = _numBlocksManager.GiveMoveInput(_commandToSend);
             if (result == NumBlocksManager.ResultCode.Success)
             {
                 _sendCommand = false;

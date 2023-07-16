@@ -18,6 +18,7 @@ public class NumBlocksManager : MonoBehaviour
 
     // Internal use flag.
     private bool _spawnNewBlockFlag = false;
+    private bool _gameOver = false;
 
     // Variables for use in functions.
     [SerializeField] private List<NumBlock> _allBlocksList = new List<NumBlock>();
@@ -43,6 +44,20 @@ public class NumBlocksManager : MonoBehaviour
         // The game starts with two randomly placed blocks.
         CreateNewNumBlock();
         CreateNewNumBlock();
+
+        Vector2Int test;
+        int testMagInt;
+        float testMagFloat;
+        for (int x = 0; x <5; x++)
+        {
+            for (int y = 0; y <5; y++)
+            {
+                test = new Vector2Int(x,y);
+                testMagFloat = test.sqrMagnitude;
+                testMagInt = test.sqrMagnitude;
+                Debug.Log($"Vector: {test} magFloat: {testMagFloat} magInt: {testMagInt}");
+            }
+        }
     }
 
     // Update is called once per frame
@@ -126,13 +141,7 @@ public class NumBlocksManager : MonoBehaviour
             if (!block.IsAtDestination())  { return ResultCode.Busy; }
         }
         // Execute the move and merge function.
-        MoveAndMerge(direction);
-        // Calculate the number of empty spaces, and if it is 0, check if the game is lost, if so return GameOver.
-        if (CalculateEmptySpaces() == 0)
-        {
-            if (CheckGameOver()) { return ResultCode.GameOver; }
-            
-        }        
+        MoveAndMerge(direction);         
         // Return Success 
         return ResultCode.Success;
     }
@@ -145,11 +154,36 @@ public class NumBlocksManager : MonoBehaviour
         _emptySpaces = emptySpaces;       
         return emptySpaces;
     }
-    // Function to check if the gamestate is game over. Not yet implemented.
+    // Function to check if the gamestate is game over.
     private bool CheckGameOver()
     {
-        Debug.Log("Unimplemented game over check.");
-        return false;
+        
+        // This function is only called when the board is full, so we only have to check direct neighbours,
+        // no further blocks.
+        // Check each block.
+        foreach (var block in _allBlocksList)
+        {
+            // First create a list of blocks that have the same value as this block.
+            List<NumBlock> matchingBlocksList = _allBlocksList.FindAll(x => x.GetValue().Equals(block.GetValue()));
+            // If the list is longer than 1, that means there is another block with the same value.
+            if (matchingBlocksList.Count > 1 )
+            {
+                // Loop over the matching blocks, and check how far away it is. If the distance is exactly 1, they are able to merge
+                // and we can return false; the game has a chance to continue. We can use the faster sqrMagnitude function, because the 
+                // square of 1 is conviniently 1.
+                foreach (var matchingBlock in  matchingBlocksList)
+                {
+                    Vector2Int differenceVector = matchingBlock.GetGridLocation() - block.GetGridLocation();
+                    int distance = differenceVector.sqrMagnitude;                    
+                    if (distance == 1) { return false; }
+                }
+            }
+            // If there are no other blocks with the same value, it can't merge and free up space.
+            
+        }
+        // If we made it through the entire loop, and found no matching neighbours, the game is over, return true.
+        _gameOver = true;
+        return true;
     }    
     // Function to destroy the block identified by the key, and remove it from the list.
     public void DestroyBlockByKey(int key)
@@ -171,6 +205,8 @@ public class NumBlocksManager : MonoBehaviour
         // Create new block, and deassert the flag.
         CreateNewNumBlock();
         _spawnNewBlockFlag = false;
+        // Then, if the board is full, check if the game is over.
+        if (CalculateEmptySpaces() == 0) { CheckGameOver(); }
     }
     // Function that does the whole move and merge in one. Is compatible with smooth block movement. It also sets the spawn new block flag.
     private void MoveAndMerge(MoveDirection direction)
@@ -277,4 +313,6 @@ public class NumBlocksManager : MonoBehaviour
         // Once done, set the spawn new block when ready flag IF a move or merge happened.
         if (hasMovedOrMerged) { _spawnNewBlockFlag = true; }       
     }
+    // Game over status get.
+    public bool GetGameOverStatus() { return _gameOver;  }
 }
