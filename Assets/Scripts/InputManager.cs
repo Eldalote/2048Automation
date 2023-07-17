@@ -73,7 +73,7 @@ public class InputManager : MonoBehaviour
             if (result == NumBlocksManager.ResultCode.Success)
             {
                 _sendCommand = false;
-            }
+            }            
 
         }
         

@@ -1,8 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Unity.VisualScripting;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
+using Debug = UnityEngine.Debug;
+
 
 public class NumBlocksManager : MonoBehaviour
 {
@@ -24,7 +31,11 @@ public class NumBlocksManager : MonoBehaviour
     [SerializeField] private List<NumBlock> _allBlocksList = new List<NumBlock>();
     [SerializeField] private int _emptySpaces = 16;    
     private int _currentKey = 0;    
-    
+    private ulong[] _testHexBoardOne = new ulong[2];
+    private ulong[] _testHexBoardTwo = new ulong[2];
+    private ulong[] _preMMHexBoard = new ulong[2];
+    private MoveDirection _lastMoveDirection;
+
     // Enum for returning status of the system to external scripts.
     public enum ResultCode
     { 
@@ -43,21 +54,7 @@ public class NumBlocksManager : MonoBehaviour
         CalculateEmptySpaces();
         // The game starts with two randomly placed blocks.
         CreateNewNumBlock();
-        CreateNewNumBlock();
-
-        Vector2Int test;
-        int testMagInt;
-        float testMagFloat;
-        for (int x = 0; x <5; x++)
-        {
-            for (int y = 0; y <5; y++)
-            {
-                test = new Vector2Int(x,y);
-                testMagFloat = test.sqrMagnitude;
-                testMagInt = test.sqrMagnitude;
-                Debug.Log($"Vector: {test} magFloat: {testMagFloat} magInt: {testMagInt}");
-            }
-        }
+        CreateNewNumBlock();       
     }
 
     // Update is called once per frame
@@ -71,12 +68,13 @@ public class NumBlocksManager : MonoBehaviour
 
     
     // Function for creating a new (properly random) number block. Returns true if succesful, false if not.
-    public bool CreateNewNumBlock()
+    public int[] CreateNewNumBlock()
     {
         // Check if there is room for a new block. 
-        if (CalculateEmptySpaces() == 0) { return false; }
+        if (CalculateEmptySpaces() == 0) { return new int[] { 0,0 }; }
         //Random from inclusive min to EXCLUSIVE max. This selects a random position for the block. The function shifts over one time less than the random number.
         int randomCount = Random.Range(1, _emptySpaces +1);
+        int passRandomCount = randomCount;
         // Start the placement at 0,0.
         Vector2Int placementLocation = new Vector2Int(0,0); 
         
@@ -97,7 +95,7 @@ public class NumBlocksManager : MonoBehaviour
                 if (placementLocation.y == _gridSize)
                 {
                     Debug.Log("Array error in numBlockManager create new.");
-                    return false;
+                    return new int[] { 0, 0 };
                 }
             }
             // If it is not yet at the end of the row, hop one over.
@@ -127,7 +125,7 @@ public class NumBlocksManager : MonoBehaviour
         _currentKey++;
         _emptySpaces--;
         // Block created succesfully.
-        return true;
+        return new int[] { passRandomCount, value };
 
     }
     // Public function to call by other script to give a move input. Returns a resultcode depending on result.
@@ -199,14 +197,16 @@ public class NumBlocksManager : MonoBehaviour
         // Check if there are any moving blocks. Simply returns the function if it finds a moving block.
         foreach (var block in _allBlocksList)
         {
-            if (!block.IsAtDestination())
-            { return; }
+            if (!block.IsAtDestination()) { return; }
         }
-        // Create new block, and deassert the flag.
-        CreateNewNumBlock();
+        // Create new block, and deassert the flag. Store random values for use in tests.
+        int[] randomValues = CreateNewNumBlock();
         _spawnNewBlockFlag = false;
         // Then, if the board is full, check if the game is over.
-        if (CalculateEmptySpaces() == 0) { CheckGameOver(); }
+        if (CalculateEmptySpaces() == 0) { CheckGameOver(); }  
+        // TESTING: Now that the new state of the board is complete, run tests of the new systems.
+        QuickMoveMergeTester(_preMMHexBoard, randomValues[0], randomValues[1], _lastMoveDirection);
+        
     }
     // Function that does the whole move and merge in one. Is compatible with smooth block movement. It also sets the spawn new block flag.
     private void MoveAndMerge(MoveDirection direction)
@@ -221,6 +221,10 @@ public class NumBlocksManager : MonoBehaviour
         NumBlock movingBlock;
 
         bool hasMovedOrMerged = false;
+
+        // TESTING: Hexboard before move merge, and direction.
+        _preMMHexBoard = GetCompactGamestate();
+        _lastMoveDirection = direction;
 
         // Set the location where we start looking, and in which direction we look. If the blocks are to be moved up,
         // start top left, then go down in the "row", and after that right to the next "row". I call it "row" with ""
@@ -311,8 +315,117 @@ public class NumBlocksManager : MonoBehaviour
         }
 
         // Once done, set the spawn new block when ready flag IF a move or merge happened.
-        if (hasMovedOrMerged) { _spawnNewBlockFlag = true; }       
+        if (hasMovedOrMerged) { _spawnNewBlockFlag = true; }             
     }
     // Game over status get.
     public bool GetGameOverStatus() { return _gameOver;  }
+    // Function to check if the game is "won" aka, if there is a value of 2048 or higher
+    public bool IsGameWon()
+    {
+        // If the game is lost, it isn't won.
+        if (_gameOver) { return false; }
+        // Then check if there exists a block that has a value of at least 11 (2^11 is 2048).
+        return _allBlocksList.Exists(x => x.GetValue() > 10);
+
+    }
+    // Function that returns 2 64bit numbers, that together represent the boardstate.
+    public ulong[] GetCompactGamestate()
+    {
+        // First of all, this only works with gridsize 4, so check if that is right.
+        if (_gridSize != 4) { return new ulong[] { 0, 0 }; }
+        // Shifting constants.
+        const int shiftOneRight = 4;
+        const int shiftOneUp = 16;        
+        // The board consists of 16 spaces (4x4). Using a 64 bit unsigned int, that gives room for 4 bits per space.
+        // The primary Hexboard holds the values up to 15 (0xF) for each space. The secondary Hexboard holds all the 
+        // overflow data. Combined that gives a full byte of data per value per space. The max value of a byte is 255,
+        // and given that the "real value" of a block is 2^value, 2^255 is a unrealistically large value. A single byte
+        // per space should be more than sufficient.
+        ulong primaryHexBoard = 0;
+        ulong secondaryHexBoard = 0;
+        ulong primaryMask;
+        ulong secondaryMask;
+        // Loop over all the blocks, and place it's value in the HexBoards.
+        foreach (var block in _allBlocksList)
+        {
+            // If the value of the block is bigger than a full byte, it won't fit in this system. That is extremely unlikely though.
+            if (block.GetValue() > 0xFF) 
+            {
+                Debug.Log("Value of block is higher than 255. Wow, that is impressive.");
+                return new ulong[] {0,0};
+            }
+            // Put the value in a ulong.
+            ulong value = Convert.ToUInt64(block.GetValue());
+            // Split the value up into the primary and secondary parts.
+            primaryMask = 0xF;
+            secondaryMask = 0xF;
+            // This grabs the lower 4 bits.
+            primaryMask = primaryMask & value;
+            // Shift over 4 bits results in the upper 4 bits of the value (we checked earlier if the value had more than 8 bits).
+            secondaryMask = value >> 4;
+            // Determine the number of places the values need to be shifted over to get to the right space.
+            int shiftSize = (block.GetGridLocation().x * shiftOneRight) + (block.GetGridLocation().y * shiftOneUp);
+            // Then shift both masks by that much, and add them to the hexboards.
+            primaryMask = primaryMask << shiftSize;
+            secondaryMask = secondaryMask << shiftSize;
+            primaryHexBoard += primaryMask;
+            secondaryHexBoard += secondaryMask;         
+            
+        }
+        // This should complete the Hexboards.        
+        return new ulong[] { primaryHexBoard, secondaryHexBoard };
+    }
+    
+    // Function to compare 2 (or later maybe more) different functions with the same goal. It displays the time it took each function.
+    private void QuickMoveMergeTester(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
+    {
+        // How many times each function is called to check runtime.
+        const int loopCount = 1000;
+        // The stopwatch to measure time
+        Stopwatch stopwatch = new Stopwatch();
+        // Run the first function once, something to do with .NET JITing. Store the results for comparing later.
+        ulong[] resultsOne = QuickMoveMergePrototypeOne(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        // Then start the stopwatch, run the function loopCount times, and then stop the stopwatch.
+        stopwatch.Start();
+        for (int i = 0; i < loopCount; i++)
+        {
+            QuickMoveMergePrototypeOne(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        }
+        stopwatch.Stop();
+        TimeSpan loopTimeTestOne = stopwatch.Elapsed;
+        // Do the same with the second function
+        ulong[] resultsTwo = QuickMoveMergePrototypeTwo(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        stopwatch.Reset();
+        stopwatch.Start();
+        for (int i = 0; i <= loopCount; i++)
+        {
+            QuickMoveMergePrototypeTwo(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        }
+        stopwatch.Stop();
+        TimeSpan loopTimeTestTwo = stopwatch.Elapsed;
+
+        bool testOneCorrect = (resultsOne == GetCompactGamestate());
+        bool testTwoCorrect = (resultsTwo == GetCompactGamestate());
+
+        Debug.Log($"Test complete. Test ran {loopCount} times. First function restult correct: {testOneCorrect}, Elapsed time: {loopTimeTestOne.Seconds} s, {loopTimeTestOne.Milliseconds} ms. Second function result correct: {testTwoCorrect}, Elapsed time: {loopTimeTestTwo.Seconds} s, {loopTimeTestTwo.Milliseconds} ms.");        
+    }
+
+    private ulong[] QuickMoveMergePrototypeOne(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
+    {
+        int i = 0;
+        for (i = 0; i < 1000; i++)
+        {
+            int rand = Random.Range(0, 2);
+            i += rand;
+        }
+
+        return originalHexBoard;
+    }
+    private ulong[] QuickMoveMergePrototypeTwo(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
+    {
+
+
+        return originalHexBoard;
+    }
+
 }
