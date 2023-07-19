@@ -30,11 +30,11 @@ public class NumBlocksManager : MonoBehaviour
     // Variables for use in functions.
     [SerializeField] private List<NumBlock> _allBlocksList = new List<NumBlock>();
     [SerializeField] private int _emptySpaces = 16;    
-    private int _currentKey = 0;    
-    private ulong[] _testHexBoardOne = new ulong[2];
-    private ulong[] _testHexBoardTwo = new ulong[2];
+    private int _currentKey = 0;       
     private ulong[] _preMMHexBoard = new ulong[2];
     private MoveDirection _lastMoveDirection;
+    private TimeSpan _totalTimeTestOne = TimeSpan.Zero;
+    private TimeSpan _totalTimeTestTwo = TimeSpan.Zero;
 
     // Enum for returning status of the system to external scripts.
     public enum ResultCode
@@ -54,7 +54,9 @@ public class NumBlocksManager : MonoBehaviour
         CalculateEmptySpaces();
         // The game starts with two randomly placed blocks.
         CreateNewNumBlock();
-        CreateNewNumBlock();       
+        CreateNewNumBlock();         
+       
+        
     }
 
     // Update is called once per frame
@@ -72,9 +74,11 @@ public class NumBlocksManager : MonoBehaviour
     {
         // Check if there is room for a new block. 
         if (CalculateEmptySpaces() == 0) { return new int[] { 0,0 }; }
-        //Random from inclusive min to EXCLUSIVE max. This selects a random position for the block. The function shifts over one time less than the random number.
-        int randomCount = Random.Range(1, _emptySpaces +1);
+        //Random from inclusive min to EXCLUSIVE max. This selects a random position for the block.
+        int randomCount = Random.Range(0, _emptySpaces);
         int passRandomCount = randomCount;
+        // The function shifts over one time less than the random number, so increase random by 1.
+        randomCount++;
         // Start the placement at 0,0.
         Vector2Int placementLocation = new Vector2Int(0,0); 
         
@@ -329,6 +333,7 @@ public class NumBlocksManager : MonoBehaviour
 
     }
     // Function that returns 2 64bit numbers, that together represent the boardstate.
+    // The least significant hex is grid 0,0 and the most significant is 3,3
     public ulong[] GetCompactGamestate()
     {
         // First of all, this only works with gridsize 4, so check if that is right.
@@ -380,52 +385,48 @@ public class NumBlocksManager : MonoBehaviour
     private void QuickMoveMergeTester(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
     {
         // How many times each function is called to check runtime.
-        const int loopCount = 1000;
+        const int loopCount = 10000;
         // The stopwatch to measure time
         Stopwatch stopwatch = new Stopwatch();
         // Run the first function once, something to do with .NET JITing. Store the results for comparing later.
-        ulong[] resultsOne = QuickMoveMergePrototypeOne(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        QuickMoveMergePrototypeOne prototypeOne = new QuickMoveMergePrototypeOne();
+        ulong[] resultsOne = prototypeOne.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         // Then start the stopwatch, run the function loopCount times, and then stop the stopwatch.
         stopwatch.Start();
         for (int i = 0; i < loopCount; i++)
         {
-            QuickMoveMergePrototypeOne(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+            prototypeOne.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         }
         stopwatch.Stop();
         TimeSpan loopTimeTestOne = stopwatch.Elapsed;
+        _totalTimeTestOne += loopTimeTestOne;
         // Do the same with the second function
-        ulong[] resultsTwo = QuickMoveMergePrototypeTwo(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+        QuickMoveMergePrototypeTwo prototypeTwo = new QuickMoveMergePrototypeTwo();
+        ulong[] resultsTwo = prototypeTwo.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         stopwatch.Reset();
         stopwatch.Start();
         for (int i = 0; i <= loopCount; i++)
         {
-            QuickMoveMergePrototypeTwo(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
+            prototypeTwo.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         }
         stopwatch.Stop();
         TimeSpan loopTimeTestTwo = stopwatch.Elapsed;
-
-        bool testOneCorrect = (resultsOne == GetCompactGamestate());
-        bool testTwoCorrect = (resultsTwo == GetCompactGamestate());
-
-        Debug.Log($"Test complete. Test ran {loopCount} times. First function restult correct: {testOneCorrect}, Elapsed time: {loopTimeTestOne.Seconds} s, {loopTimeTestOne.Milliseconds} ms. Second function result correct: {testTwoCorrect}, Elapsed time: {loopTimeTestTwo.Seconds} s, {loopTimeTestTwo.Milliseconds} ms.");        
-    }
-
-    private ulong[] QuickMoveMergePrototypeOne(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
-    {
-        int i = 0;
-        for (i = 0; i < 1000; i++)
+        _totalTimeTestTwo += loopTimeTestTwo;
+        // Check if the results of the tests are correct.
+        ulong[] checkHexBoard = GetCompactGamestate();
+        bool testOneCorrect = ((checkHexBoard[0] == resultsOne[0]) && (checkHexBoard[1] == resultsOne[1]));
+        bool testTwoCorrect = ((checkHexBoard[0] == resultsTwo[0]) && (checkHexBoard[1] == resultsTwo[1]));
+        
+        // Report findings.        
+        if (testOneCorrect && testTwoCorrect)
+        { }
+        else
         {
-            int rand = Random.Range(0, 2);
-            i += rand;
+            Debug.Log($"ERROR, INCORRECT RESULT One: {testOneCorrect}, two: {testTwoCorrect} \n\n\n ERROR \n\n ERROR");
         }
-
-        return originalHexBoard;
-    }
-    private ulong[] QuickMoveMergePrototypeTwo(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
-    {
-
-
-        return originalHexBoard;
-    }
+        Debug.Log($"Total Times so far: One: {_totalTimeTestOne.ToString()}, Two: {_totalTimeTestTwo.ToString()}");
+        //Debug.Log($"Test complete. Test ran {loopCount} times. First function restult correct: {testOneCorrect}, Elapsed time: {loopTimeTestOne.Seconds} s, {loopTimeTestOne.Milliseconds} ms. Second function result correct: {testTwoCorrect}, Elapsed time: {loopTimeTestTwo.Seconds} s, {loopTimeTestTwo.Milliseconds} ms.");        
+    }    
+    
 
 }
