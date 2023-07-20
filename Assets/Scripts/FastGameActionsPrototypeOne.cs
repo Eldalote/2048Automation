@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class QuickMoveMergePrototypeOne 
+public class FastGameActionsPrototypeOne 
 {
     // Constructor
-    public QuickMoveMergePrototypeOne()
+    public FastGameActionsPrototypeOne()
     {
 
     }
@@ -334,5 +334,12 @@ public class QuickMoveMergePrototypeOne
         }
         // Return string version of the game value.
         return value.ToString().PadLeft(6, '0');
+    }
+    // Function that checks game over status from hexBoardArray. Only call this function if there are no empty spaces on the board.
+    public bool CheckGameOver(ulong[] hexBoardArray)
+    {
+
+
+        return false;
     }
 }

@@ -35,6 +35,7 @@ public class NumBlocksManager : MonoBehaviour
     private MoveDirection _lastMoveDirection;
     private TimeSpan _totalTimeTestOne = TimeSpan.Zero;
     private TimeSpan _totalTimeTestTwo = TimeSpan.Zero;
+    [SerializeField] private ulong _currentScore = 0;
 
     // Enum for returning status of the system to external scripts.
     public enum ResultCode
@@ -389,7 +390,7 @@ public class NumBlocksManager : MonoBehaviour
         // The stopwatch to measure time
         Stopwatch stopwatch = new Stopwatch();
         // Run the first function once, something to do with .NET JITing. Store the results for comparing later.
-        QuickMoveMergePrototypeOne prototypeOne = new QuickMoveMergePrototypeOne();
+        FastGameActionsPrototypeOne prototypeOne = new FastGameActionsPrototypeOne();
         ulong[] resultsOne = prototypeOne.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         // Then start the stopwatch, run the function loopCount times, and then stop the stopwatch.
         stopwatch.Start();
@@ -401,7 +402,7 @@ public class NumBlocksManager : MonoBehaviour
         TimeSpan loopTimeTestOne = stopwatch.Elapsed;
         _totalTimeTestOne += loopTimeTestOne;
         // Do the same with the second function
-        QuickMoveMergePrototypeTwo prototypeTwo = new QuickMoveMergePrototypeTwo();
+        FastGameActionsPrototypeTwo prototypeTwo = new FastGameActionsPrototypeTwo();
         ulong[] resultsTwo = prototypeTwo.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
         stopwatch.Reset();
         stopwatch.Start();
@@ -427,6 +428,16 @@ public class NumBlocksManager : MonoBehaviour
         Debug.Log($"Total Times so far: One: {_totalTimeTestOne.ToString()}, Two: {_totalTimeTestTwo.ToString()}");
         //Debug.Log($"Test complete. Test ran {loopCount} times. First function restult correct: {testOneCorrect}, Elapsed time: {loopTimeTestOne.Seconds} s, {loopTimeTestOne.Milliseconds} ms. Second function result correct: {testTwoCorrect}, Elapsed time: {loopTimeTestTwo.Seconds} s, {loopTimeTestTwo.Milliseconds} ms.");        
     }    
+    // Function blocks can call when they merge to increase the game score
+    public void IncreaseScore(int mergeValue)
+    {
+        _currentScore += ((ulong) 1 << mergeValue);
+    }    
+    // Score Get
+    public ulong GetScore()
+    {
+        return _currentScore;
+    }
     
 
 }

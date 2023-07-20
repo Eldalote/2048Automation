@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class QuickMoveMergePrototypeTwo
+public class FastGameActionsPrototypeTwo
 {
     // Constructor
-    public QuickMoveMergePrototypeTwo()
+    public FastGameActionsPrototypeTwo()
     {
 
     }

@@ -247,7 +247,9 @@ public class NumBlock : MonoBehaviour
     private void FinalMergeCall()
     {        
         // Increase the value of the merge target by one.
-        _mergeTarget.IncreaseValueByOne();       
+        _mergeTarget.IncreaseValueByOne();
+        // Increase the score.
+        _managerParent.IncreaseScore(_value + 1);
         // Give parent instruction to distroy this block (the parent needs the call to remove it from it's list).
         _managerParent.DestroyBlockByKey(_key);
 
