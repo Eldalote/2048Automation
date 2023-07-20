@@ -64,8 +64,7 @@ public class InputManager : MonoBehaviour
         if (_sendCommand)
         {            
             if (_numBlocksManager.GetGameOverStatus()) 
-            {
-                Debug.Log("Game over has been reported, action needed in Inputmanager.");
+            {                
                 _sendCommand = false;
                 return;
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEditor.UI;
 using UnityEngine;
+using static UnityEditor.FilePathAttribute;
 
 public class NumBlock : MonoBehaviour
 {
@@ -45,6 +46,8 @@ public class NumBlock : MonoBehaviour
         // Call functions to display correct colour and text.
         SetColour();
         SetText();
+        // Name the gameobject for clarity in the unity editor.
+        gameObject.name = $"Block {gridlocation.x}, {gridlocation.y}";
     }
 
     // Start is called before the first frame update
@@ -175,7 +178,9 @@ public class NumBlock : MonoBehaviour
     public void SetGridLocation(Vector2Int location)
     {
         if (_gridLocation != location) { _atDestination = false; }
-        _gridLocation = location;        
+        _gridLocation = location;
+        // Name object for clarity in the unity editor.
+        gameObject.name = $"Block {location.x}, {location.y}";
     }
     // Function to update the location of the block on the screen. It moves the block to the correct grid location. This function is called in the update method.
     private void UpdateScreenLocation()

@@ -9,12 +9,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 using Debug = UnityEngine.Debug;
-
+using JetBrains.Annotations;
 
 public class NumBlocksManager : MonoBehaviour
 {
     // Unity parts attached to the game object.
-    [SerializeField] private NumBlock _numBlockPreFab;
+    [SerializeField] private NumBlock _numBlockTemplate;
 
 
     // Settings variables.
@@ -46,16 +46,31 @@ public class NumBlocksManager : MonoBehaviour
         GameOver,
         Win2048
     }
-    
+
+    public delegate void ScoreChanged(ulong score);
+    public static ScoreChanged scoreChanged;
+    public delegate void GameOver();
+    public static GameOver gameOver;
+    public delegate void GameStarted();
+    public static GameStarted gameStarted;
+    // Initialize function
+    public void Initialize(int gridSize, int gridScale, int blockMoveSpeed, int blockScreenLayer)
+    {
+        // Set game variables.
+        _gridScale = gridScale;
+        _gridSize = gridSize;   
+        _blockMoveSpeed = blockMoveSpeed;
+        _blockScreenLayer = blockScreenLayer;
+
+        // Start new game.
+        StartNewGame();
+        // Hide block template.
+        _numBlockTemplate.gameObject.SetActive(false);
+    }
 
     // Start is called before the first frame update
     void Start()
-    {
-        // The number of empty spaces depends on the grid size settings. 
-        CalculateEmptySpaces();
-        // The game starts with two randomly placed blocks.
-        CreateNewNumBlock();
-        CreateNewNumBlock();         
+    {        
        
         
     }
@@ -124,9 +139,11 @@ public class NumBlocksManager : MonoBehaviour
         
         // Create the new block, pass it's information to it, and add it to the block list. And decrease the number of empty spaces just to be sure.
         Vector3 spaceLocation = new Vector3Int(placementLocation.x * _gridScale, placementLocation.y * _gridScale,-1);
-        NumBlock newBlock = Instantiate(_numBlockPreFab, spaceLocation, Quaternion.identity);
+        NumBlock newBlock = Instantiate(_numBlockTemplate, gameObject.transform);
+        newBlock.gameObject.SetActive(true);
+        newBlock.transform.position = spaceLocation;
         newBlock.Initialize(value, placementLocation, _currentKey, _gridScale, _blockMoveSpeed, _blockScreenLayer, this);       
-        _allBlocksList.Add(newBlock);        
+        _allBlocksList.Add(newBlock);           
         _currentKey++;
         _emptySpaces--;
         // Block created succesfully.
@@ -185,6 +202,8 @@ public class NumBlocksManager : MonoBehaviour
             
         }
         // If we made it through the entire loop, and found no matching neighbours, the game is over, return true.
+        // Send gameOver event.
+        gameOver?.Invoke();
         _gameOver = true;
         return true;
     }    
@@ -432,12 +451,40 @@ public class NumBlocksManager : MonoBehaviour
     public void IncreaseScore(int mergeValue)
     {
         _currentScore += ((ulong) 1 << mergeValue);
+        // Send scoreChanged Event.
+        scoreChanged?.Invoke(_currentScore);
     }    
     // Score Get
     public ulong GetScore()
     {
         return _currentScore;
     }
-    
+    // Destroy gameObject that this script is tied to.
+    public void DestroyThisGameObject()
+    {
+        Destroy(gameObject);
+    }
+    // Function to restart the game
+    public void StartNewGame()
+    {
+        // Reset the score and block key to zero, set gameover to false. Send game started event.
+        _currentKey = 0;
+        _currentScore = 0;
+        _gameOver = false;
+        gameStarted?.Invoke();
+        // Score has changed (to zero) so send that event too.
+        scoreChanged?.Invoke(0);
+        // Destroy each block and clear the list.
+        foreach (var block in _allBlocksList)
+        {
+            block.DestroyThisBlock();            
+        }
+        _allBlocksList.Clear();
 
+        // Restart the game
+        _emptySpaces = CalculateEmptySpaces();
+        // Game starts with two randomly placed blocks.
+        CreateNewNumBlock();
+        CreateNewNumBlock();
+    }
 }
