@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class FastGameActionsPrototypeTwo
+public class FastGameActions 
 {
     // Constructor
-    public FastGameActionsPrototypeTwo()
+    public FastGameActions()
     {
 
     }
-
+        
     // Main function, the move and merge.
     public ulong[] MoveMerge(ulong[] originalHexBoardArray, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
     {
         // Create the working variables named as lines. Upper and lower (values).
-        ulong[] lineUpperArray = new ulong[4] { 0, 0, 0, 0 };
-        ulong[] lineLowerArray = new ulong[4] { 0, 0, 0, 0 };
+        ulong[] lineUpperArray = new ulong[4] {0,0,0,0};
+        ulong[] lineLowerArray = new ulong[4] {0,0,0,0};
 
         // If the direction is left or right, split into rows.
         if (direction == MoveDirection.Left || direction == MoveDirection.Right)
@@ -28,18 +28,18 @@ public class FastGameActionsPrototypeTwo
                                                     0x0000FFFF00000000,
                                                     0xFFFF000000000000};
             // If the upper hexboard is 0, we can just leave the upper lines at 0, otherwise we have to do work.
-            if (originalHexBoardArray[1] != 0)
+            if (originalHexBoardArray[1] != 0)            
             {
                 for (int i = 0; i < 4; i++)
                 {
                     lineUpperArray[i] = (originalHexBoardArray[1] & rowMaskArray[i]) >> (i * 16);
-                }
+                }              
             }
             // Now do the lower lines.
             for (int i = 0; i < 4; i++)
             {
                 lineLowerArray[i] = (originalHexBoardArray[0] & rowMaskArray[i]) >> (i * 16);
-            }
+            }           
         }
         // If up or down, split into columns.
         else
@@ -50,51 +50,51 @@ public class FastGameActionsPrototypeTwo
                                                         0x0F000F000F000F00,
                                                         0xF000F000F000F000};
             // If the upper hexboard is 0, we can just leave the upper lines at 0, otherwise we have to do work.
-            if (originalHexBoardArray[1] != 0)
+            if (originalHexBoardArray[1] != 0)            
             {
                 // They are all shifted over so that the first actual number is on the least significant spot, all equal.
                 // Feed that into the BunchUpColumn function, so that they are all at the LSB side of the number.
                 for (int i = 0; i < 4; i++)
                 {
-                    lineUpperArray[i] = BunchUpColumn((originalHexBoardArray[1] & columnMaskArray[i]) >> (i * 4));
-                }
+                    lineUpperArray[i] = BunchUpColumn((originalHexBoardArray[1] & columnMaskArray[i]) >>  (i * 4));
+                }            
             }
             // Now do the same, but for the lower lines.            
             for (int i = 0; i < 4; i++)
             {
-                lineLowerArray[i] = BunchUpColumn((originalHexBoardArray[0] & columnMaskArray[i]) >> (i * 4));
+                lineLowerArray[i] = BunchUpColumn((originalHexBoardArray[0] & columnMaskArray[i]) >>  (i * 4));
             }
         }
         // At this point, the lines are in the correct order for moving left or down,
         // but need to be reversed for moving up or right
-        if (direction == MoveDirection.Up || direction == MoveDirection.Right)
+        if (direction == MoveDirection.Up || direction == MoveDirection.Right) 
         {
-            // Only flip the lines if they are not 0.
+            // TESTING: Only flip the lines if they are not 0. Is this faster?
             for (int i = 0; i < 4; i++)
             {
                 if (lineUpperArray[i] != 0)
                 {
                     lineUpperArray[i] = FlipLine(lineUpperArray[i]);
                 }
-            }
+            }            
             for (int i = 0; i < 4; i++)
             {
                 if (lineLowerArray[i] != 0)
                 {
                     lineLowerArray[i] = FlipLine(lineLowerArray[i]);
-                }
+                }                
             }
-        }
+        }        
         // Then combine each line pair into a single line holding the complete value.
         ulong[] linesCombinedValueArray = new ulong[4];
         for (int i = 0; i < 4; i++)
         {
             linesCombinedValueArray[i] = CombineLowerUpperIntoOne(lineLowerArray[i], lineUpperArray[i]);
-        }
+        }      
         // Then execute a move-merge on each line.
         for (int i = 0; i < 4; i++)
         {
-            linesCombinedValueArray[i] = MoveMergeLine(linesCombinedValueArray[i]);
+            linesCombinedValueArray[i] = MoveMergeLine(linesCombinedValueArray[i]);            
         }
         // Split the combined values back into the seperate parts.
         for (int i = 0; i < 4; i++)
@@ -108,7 +108,7 @@ public class FastGameActionsPrototypeTwo
         {
             for (int i = 0; i < 4; i++)
             {
-                // Only spend effort flipping if it isn't 0.
+                // TESTING: Is the if faster?
                 if (lineLowerArray[i] != 0)
                 {
                     lineLowerArray[i] = FlipLine(lineLowerArray[i]);
@@ -116,11 +116,11 @@ public class FastGameActionsPrototypeTwo
                 if (lineUpperArray[i] != 0)
                 {
                     lineUpperArray[i] = FlipLine(lineUpperArray[i]);
-                }
+                }  
             }
         }
         // Combine the lines back into full boards.
-        ulong[] newHexBoardArray = new ulong[2] { 0, 0 };
+        ulong[] newHexBoardArray = new ulong[2] {0,0};
         if (direction == MoveDirection.Left || direction == MoveDirection.Right)
         {
             // For left to right it's simple. Add the lines to the hexgrid, shifted over depending on the line.
@@ -145,9 +145,9 @@ public class FastGameActionsPrototypeTwo
         {
             // Shift over newNumblockLocation blank spaces to spawn the new block.
             ulong shiftMask = 0xF;
-            int shiftCount = 0;
-            while (true)
-            {
+            int shiftCount = 0;            
+            while(true)
+            {                
                 // If the value of the space currently being checked is not 0, move over, without decreasing random count.
                 if (((newHexBoardArray[0] & shiftMask) != 0) || ((newHexBoardArray[1] & shiftMask) != 0))
                 {
@@ -169,7 +169,7 @@ public class FastGameActionsPrototypeTwo
                         newBlockRandomLocation--;
                     }
                 }
-
+                    
             }
         }
         // This should be it.      
@@ -185,9 +185,9 @@ public class FastGameActionsPrototypeTwo
     // Function to bunch up spread out column values.
     private ulong BunchUpColumn(ulong spreadColumn)
     {
-        ulong bunched = new ulong();
+        ulong bunched = new ulong();        
         bunched = (spreadColumn & 0xF) | ((spreadColumn >> 12) & 0xF0)
-                                | ((spreadColumn >> 24) & 0xF00) | ((spreadColumn >> 36) & 0xF000);
+                                | ((spreadColumn >> 24) & 0xF00) | ((spreadColumn >> 36) & 0xF000);       
         return bunched;
     }
     // Function to spread out the column that was earlier bunched up.
@@ -225,7 +225,7 @@ public class FastGameActionsPrototypeTwo
             {
                 // Loop over the possible checkLocations and find a non-0 value. The further we are in the i loop,
                 // the less far we have to look. 
-                for (int j = 0; j < 4 - (x + i); j++)
+                for (int j = 0; j < 4 - (x + i); j++) 
                 {
                     if ((lineToMoveMerge & checkLocationMask) != 0)
                     {
@@ -239,22 +239,22 @@ public class FastGameActionsPrototypeTwo
                     }
                     // If the current checkLocation is 0, move it up.
                     checkLocationMask <<= 8;
-                    locationValueOffset += 8;
+                    locationValueOffset+= 8;
                 }
             }
             // Now look again if there is a block (it might just have moved here) and check if there is a merge possebility.            
             if ((lineToMoveMerge & moveTargetMask) != 0)
             {
-                for (int j = 0; j < 4 - (x + i); j++)
+                for (int j = 0; j < 4 - (x +i); j++)
                 {
                     // If the checking location is 0, move the checking location and continue with the loop.                    
                     if (((lineToMoveMerge & checkLocationMask) == 0))
                     {
                         checkLocationMask <<= 8;
-                        locationValueOffset += 8;
+                        locationValueOffset+= 8;
                     }
                     // Else if the checking location is equal to the moveTargetLocation, merge, then break the loop.
-                    else if (((lineToMoveMerge & checkLocationMask) >> locationValueOffset) == (lineToMoveMerge & moveTargetMask))
+                    else if (((lineToMoveMerge & checkLocationMask) >>  locationValueOffset) == (lineToMoveMerge & moveTargetMask))
                     {
                         // Clear the value in the checkLocation.
                         lineToMoveMerge &= ~checkLocationMask;
@@ -293,21 +293,21 @@ public class FastGameActionsPrototypeTwo
     private ulong[] SplitCombinedValueIntoLowerUpper(ulong combinedValue)
     {
         ulong[] split = new ulong[2];
-        split[0] = (combinedValue & 0xF) | ((combinedValue & 0xF00) >> 4)
+        split[0] = (combinedValue & 0xF) | ((combinedValue & 0xF00) >> 4) 
             | ((combinedValue & 0xF0000) >> 8) | ((combinedValue & 0xF000000) >> 12);
         split[1] = ((combinedValue & 0xF0) >> 4) | ((combinedValue & 0xF000) >> 8) |
             ((combinedValue & 0xF00000) >> 12) | ((combinedValue & 0xF0000000) >> 16);
         return split;
-    }
-    // Function for TESTING, print the hexboards to debug or returned as string.
+    }    
+    // Function for TESTING, print the hexboards to debug or as return string.
     public string PrintHexBoard(ulong[] hexBoardArray)
     {
         string hexBoardString = new string("");
         for (int y = 3; y >= 0; y--)
         {
             for (int x = 0; x < 4; x++)
-            {
-                hexBoardString = hexBoardString + HexToString(hexBoardArray, new Vector2Int(x, y)) + ", ";
+            {                
+                hexBoardString = hexBoardString + HexToString(hexBoardArray, new Vector2Int(x, y)) + ", "; 
             }
             hexBoardString += "\n";
         }
@@ -315,24 +315,31 @@ public class FastGameActionsPrototypeTwo
         return hexBoardString;
 
     }
-    // Function for TESTING, convert single hex space to string.
-    private string HexToString(ulong[] hexBoardArray, Vector2Int hexLocation)
+    // Function for TESTING, returns the indicated hex board space as string.
+    private string HexToString(ulong[] hexBoardArray, Vector2Int hexLocation) 
     {
         // Create new ulong array
-        ulong[] printBoardArray = new ulong[2] { 0, 0 };
+        ulong[] printBoardArray = new ulong[2] {0,0}; 
         // The new array values are the passed array shifted over by the grid location.
         printBoardArray[0] = hexBoardArray[0] >> (hexLocation.x * 4) + (hexLocation.y * 16);
-        printBoardArray[1] = hexBoardArray[1] >> (hexLocation.x * 4) + (hexLocation.y * 16);
+        printBoardArray[1] = hexBoardArray[1] >> (hexLocation.x * 4) + (hexLocation.y * 16);   
         // The value is added from lower and upper parts.
         ulong value = (printBoardArray[0] & 0xF) | ((printBoardArray[1] & 0xF) << 4);
         // For display, the game value is wanted, so do 2^value.
         int toThePower = Convert.ToInt32(value);
-        value = (ulong)2 << (toThePower - 1);
+        value = (ulong)2 << (toThePower -1);
         if (value == 1)
         {
             value = 0;
         }
         // Return string version of the game value.
         return value.ToString().PadLeft(6, '0');
+    }
+    // Function that checks game over status from hexBoardArray. Only call this function if there are no empty spaces on the board.
+    public bool CheckGameOver(ulong[] hexBoardArray)
+    {
+
+
+        return false;
     }
 }

@@ -31,10 +31,7 @@ public class NumBlocksManager : MonoBehaviour
     [SerializeField] private List<NumBlock> _allBlocksList = new List<NumBlock>();
     [SerializeField] private int _emptySpaces = 16;    
     private int _currentKey = 0;       
-    private ulong[] _preMMHexBoard = new ulong[2];
-    private MoveDirection _lastMoveDirection;
-    private TimeSpan _totalTimeTestOne = TimeSpan.Zero;
-    private TimeSpan _totalTimeTestTwo = TimeSpan.Zero;
+    
     [SerializeField] private ulong _currentScore = 0;
 
     // Enum for returning status of the system to external scripts.
@@ -47,12 +44,21 @@ public class NumBlocksManager : MonoBehaviour
         Win2048
     }
 
+    // Delegates for events sent by this class.
+    // Score change.
     public delegate void ScoreChanged(ulong score);
     public static ScoreChanged scoreChanged;
+    // Game over detected.
     public delegate void GameOver();
     public static GameOver gameOver;
+    // New game has started.
     public delegate void GameStarted();
     public static GameStarted gameStarted;
+    // Ready for new move input.
+    public delegate void ReadyForNewInput();
+    public static ReadyForNewInput readyForNewInput;
+
+
     // Initialize function
     public void Initialize(int gridSize, int gridScale, int blockMoveSpeed, int blockScreenLayer)
     {
@@ -66,13 +72,6 @@ public class NumBlocksManager : MonoBehaviour
         StartNewGame();
         // Hide block template.
         _numBlockTemplate.gameObject.SetActive(false);
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {        
-       
-        
     }
 
     // Update is called once per frame
@@ -228,8 +227,11 @@ public class NumBlocksManager : MonoBehaviour
         _spawnNewBlockFlag = false;
         // Then, if the board is full, check if the game is over.
         if (CalculateEmptySpaces() == 0) { CheckGameOver(); }  
-        // TESTING: Now that the new state of the board is complete, run tests of the new systems.
-        QuickMoveMergeTester(_preMMHexBoard, randomValues[0], randomValues[1], _lastMoveDirection);
+        // Then, if the game is not over, let it be known that it is ready for a new move.
+        if (!_gameOver)
+        {
+            readyForNewInput?.Invoke();
+        }
         
     }
     // Function that does the whole move and merge in one. Is compatible with smooth block movement. It also sets the spawn new block flag.
@@ -245,10 +247,6 @@ public class NumBlocksManager : MonoBehaviour
         NumBlock movingBlock;
 
         bool hasMovedOrMerged = false;
-
-        // TESTING: Hexboard before move merge, and direction.
-        _preMMHexBoard = GetCompactGamestate();
-        _lastMoveDirection = direction;
 
         // Set the location where we start looking, and in which direction we look. If the blocks are to be moved up,
         // start top left, then go down in the "row", and after that right to the next "row". I call it "row" with ""
@@ -339,7 +337,15 @@ public class NumBlocksManager : MonoBehaviour
         }
 
         // Once done, set the spawn new block when ready flag IF a move or merge happened.
-        if (hasMovedOrMerged) { _spawnNewBlockFlag = true; }             
+        if (hasMovedOrMerged) 
+        { 
+            _spawnNewBlockFlag = true; 
+        }
+        // If no move or merge happened, let it be known that the manager is ready for a new input now.
+        else
+        {
+            readyForNewInput?.Invoke();
+        }        
     }
     // Game over status get.
     public bool GetGameOverStatus() { return _gameOver;  }
@@ -400,53 +406,6 @@ public class NumBlocksManager : MonoBehaviour
         // This should complete the Hexboards.        
         return new ulong[] { primaryHexBoard, secondaryHexBoard };
     }
-    
-    // Function to compare 2 (or later maybe more) different functions with the same goal. It displays the time it took each function.
-    private void QuickMoveMergeTester(ulong[] originalHexBoard, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
-    {
-        // How many times each function is called to check runtime.
-        const int loopCount = 10000;
-        // The stopwatch to measure time
-        Stopwatch stopwatch = new Stopwatch();
-        // Run the first function once, something to do with .NET JITing. Store the results for comparing later.
-        FastGameActionsPrototypeOne prototypeOne = new FastGameActionsPrototypeOne();
-        ulong[] resultsOne = prototypeOne.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
-        // Then start the stopwatch, run the function loopCount times, and then stop the stopwatch.
-        stopwatch.Start();
-        for (int i = 0; i < loopCount; i++)
-        {
-            prototypeOne.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
-        }
-        stopwatch.Stop();
-        TimeSpan loopTimeTestOne = stopwatch.Elapsed;
-        _totalTimeTestOne += loopTimeTestOne;
-        // Do the same with the second function
-        FastGameActionsPrototypeTwo prototypeTwo = new FastGameActionsPrototypeTwo();
-        ulong[] resultsTwo = prototypeTwo.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
-        stopwatch.Reset();
-        stopwatch.Start();
-        for (int i = 0; i <= loopCount; i++)
-        {
-            prototypeTwo.MoveMerge(originalHexBoard, newBlockRandomLocation, newBlockValue, direction);
-        }
-        stopwatch.Stop();
-        TimeSpan loopTimeTestTwo = stopwatch.Elapsed;
-        _totalTimeTestTwo += loopTimeTestTwo;
-        // Check if the results of the tests are correct.
-        ulong[] checkHexBoard = GetCompactGamestate();
-        bool testOneCorrect = ((checkHexBoard[0] == resultsOne[0]) && (checkHexBoard[1] == resultsOne[1]));
-        bool testTwoCorrect = ((checkHexBoard[0] == resultsTwo[0]) && (checkHexBoard[1] == resultsTwo[1]));
-        
-        // Report findings.        
-        if (testOneCorrect && testTwoCorrect)
-        { }
-        else
-        {
-            Debug.Log($"ERROR, INCORRECT RESULT One: {testOneCorrect}, two: {testTwoCorrect} \n\n\n ERROR \n\n ERROR");
-        }
-        Debug.Log($"Total Times so far: One: {_totalTimeTestOne.ToString()}, Two: {_totalTimeTestTwo.ToString()}");
-        //Debug.Log($"Test complete. Test ran {loopCount} times. First function restult correct: {testOneCorrect}, Elapsed time: {loopTimeTestOne.Seconds} s, {loopTimeTestOne.Milliseconds} ms. Second function result correct: {testTwoCorrect}, Elapsed time: {loopTimeTestTwo.Seconds} s, {loopTimeTestTwo.Milliseconds} ms.");        
-    }    
     // Function blocks can call when they merge to increase the game score
     public void IncreaseScore(int mergeValue)
     {
@@ -467,13 +426,10 @@ public class NumBlocksManager : MonoBehaviour
     // Function to restart the game
     public void StartNewGame()
     {
-        // Reset the score and block key to zero, set gameover to false. Send game started event.
+        // Reset the score and block key to zero, set gameover to false.
         _currentKey = 0;
         _currentScore = 0;
-        _gameOver = false;
-        gameStarted?.Invoke();
-        // Score has changed (to zero) so send that event too.
-        scoreChanged?.Invoke(0);
+        _gameOver = false;                
         // Destroy each block and clear the list.
         foreach (var block in _allBlocksList)
         {
@@ -486,5 +442,9 @@ public class NumBlocksManager : MonoBehaviour
         // Game starts with two randomly placed blocks.
         CreateNewNumBlock();
         CreateNewNumBlock();
+        // Once this is all done, let it be known that a new game has started
+        gameStarted?.Invoke();
+        // Score has changed (to zero) so send that event too.
+        scoreChanged?.Invoke(0);
     }
 }

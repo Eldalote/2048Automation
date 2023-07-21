@@ -13,22 +13,17 @@ public class HighScoreTable : MonoBehaviour
     private List<HighScoreEntry> _highScoreEntryList = new List<HighScoreEntry>();
     private Highscores _highScores = new Highscores();
     private int _entryHeight = 50;
-    private int _numberOfScoresKept = 12;
+    private int _numberOfScoresKept = 15;
     private string _highscoreSaveLocation = "Saves/HighScores.dat";
 
    
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     private void Awake()
     {
         // Subscribe to relevant numblock manager events.
         NumBlocksManager.gameStarted += NewCurrentScore;
-        NumBlocksManager.gameOver += SaveScores;
+        NumBlocksManager.gameOver += SaveGameEndScores;
         NumBlocksManager.scoreChanged += UpdateCurrentScore;
 
         // Set the template as the header.
@@ -68,16 +63,26 @@ public class HighScoreTable : MonoBehaviour
         _highScores.ScoreList.Add(currentScore);
     }
     // Save the current score to the highscore.
-    private void SaveScores()
+    private void SaveGameEndScores()
     {
         // Start by renaming current to player TODO: implement player/auto naming
         ScoreEntry currentScore = _highScores.ScoreList.Find(x => x.Name == "Current");
         currentScore.Name = "Player";
+        // Then, if the number of entries is higher than the amount we should keep, drop the lowest.
+        if (_highScores.ScoreList.Count > _numberOfScoresKept)
+        {
+            _highScores.ScoreList.Remove(_highScores.ScoreList[_numberOfScoresKept]);
+        }
+        // Then convert to JSON, and store in file.
         string JSON = JsonUtility.ToJson(_highScores);
         FileManager.WriteToFile(_highscoreSaveLocation, JSON);
     }
     private void UpdateCurrentScore(ulong score)
     {
+        if(!_highScores.ScoreList.Exists(x => x.Name == "Current"))
+        {
+            return;
+        }
         ScoreEntry currentScore = _highScores.ScoreList.Find(x => x.Name == "Current");
         currentScore.Score = score;
         SortHighScores(_highScores);
@@ -97,10 +102,9 @@ public class HighScoreTable : MonoBehaviour
             HighScoreEntry displayEntry = Instantiate(_entryTemplate, _entryContainer);
             RectTransform entryRectTransform = displayEntry.GetComponent<RectTransform>();
             entryRectTransform.anchoredPosition = new Vector2(0f, -(i + 1) * _entryHeight);
-            //TESTING:
-            displayEntry.gameObject.SetActive(true);
-
+            // Toggle background on/off depending on place in list, so we get alternating backgrounds.
             bool backgroundOn = (i % 2 == 1);
+            // Store all the information in strings for more readable entry.
             int position = i + 1;
             string positionString = position.ToString();
             string scoreString = _highScores.ScoreList[i].Score.ToString();

@@ -12,6 +12,8 @@ public class HighScoreEntry : MonoBehaviour
     private TextMeshProUGUI _positionText;
     private TextMeshProUGUI _scoreText;
     private TextMeshProUGUI _nameText;
+    private Color _defaultColour = Color.white;
+    private Color _currentColour = Color.green;
 
     private void Awake()
     {
@@ -29,5 +31,18 @@ public class HighScoreEntry : MonoBehaviour
         _positionText.text = positionText;
         _scoreText.text = scoreText;
         _nameText.text = nameText;
+        // Set the color of the text to currentcolour if the entry is current, to default if not.
+        if (nameText == "Current" )
+        {
+            _positionText.color = _currentColour;
+            _scoreText.color = _currentColour;
+            _nameText.color = _currentColour;
+        }
+        else
+        {
+            _positionText.color = _defaultColour;
+            _scoreText.color = _defaultColour;
+            _nameText.color = _defaultColour;
+        }
     }
 }
