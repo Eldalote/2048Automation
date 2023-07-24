@@ -13,7 +13,7 @@ public class FastGameActions
     }
         
     // Main function, the move and merge.
-    public ulong[] MoveMerge(ulong[] originalHexBoardArray, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
+    public ulong[] MoveMergeOld(ulong[] originalHexBoardArray, int newBlockRandomLocation, int newBlockValue, MoveDirection direction)
     {
         // Create the working variables named as lines. Upper and lower (values).
         ulong[] lineUpperArray = new ulong[4] {0,0,0,0};
@@ -141,37 +141,37 @@ public class FastGameActions
         }
         // Now we have the complete hexboards after the move-merge, now we just need to spawn a new block if a move-merge happened.
         // We compare the new hexboard to the original hexboard, if it is unchanged, no new block.
-        if (originalHexBoardArray != newHexBoardArray)
-        {
-            // Shift over newNumblockLocation blank spaces to spawn the new block.
-            ulong shiftMask = 0xF;
-            int shiftCount = 0;            
-            while(true)
-            {                
-                // If the value of the space currently being checked is not 0, move over, without decreasing random count.
-                if (((newHexBoardArray[0] & shiftMask) != 0) || ((newHexBoardArray[1] & shiftMask) != 0))
-                {
-                    shiftMask <<= 4;
-                    shiftCount += 4;
-                }
-                // If it is 0, place the block if random = 0 (and break the loop!), else decrease random by one and move over a space.
-                else
-                {
-                    if (newBlockRandomLocation == 0)
-                    {
-                        newHexBoardArray[0] += Convert.ToUInt64(newBlockValue) << shiftCount;
-                        break;
-                    }
-                    else
-                    {
-                        shiftMask <<= 4;
-                        shiftCount += 4;
-                        newBlockRandomLocation--;
-                    }
-                }
+        //if (originalHexBoardArray != newHexBoardArray)
+        //{
+        //    // Shift over newNumblockLocation blank spaces to spawn the new block.
+        //    ulong shiftMask = 0xF;
+        //    int shiftCount = 0;            
+        //    while(true)
+        //    {                
+        //        // If the value of the space currently being checked is not 0, move over, without decreasing random count.
+        //        if (((newHexBoardArray[0] & shiftMask) != 0) || ((newHexBoardArray[1] & shiftMask) != 0))
+        //        {
+        //            shiftMask <<= 4;
+        //            shiftCount += 4;
+        //        }
+        //        // If it is 0, place the block if random = 0 (and break the loop!), else decrease random by one and move over a space.
+        //        else
+        //        {
+        //            if (newBlockRandomLocation == 0)
+        //            {
+        //                newHexBoardArray[0] += Convert.ToUInt64(newBlockValue) << shiftCount;
+        //                break;
+        //            }
+        //            else
+        //            {
+        //                shiftMask <<= 4;
+        //                shiftCount += 4;
+        //                newBlockRandomLocation--;
+        //            }
+        //        }
                     
-            }
-        }
+        //    }
+        //}
         // This should be it.      
         return newHexBoardArray;
     }
@@ -248,7 +248,7 @@ public class FastGameActions
                 for (int j = 0; j < 4 - (x +i); j++)
                 {
                     // If the checking location is 0, move the checking location and continue with the loop.                    
-                    if (((lineToMoveMerge & checkLocationMask) == 0))
+                    if ((lineToMoveMerge & checkLocationMask) == 0)
                     {
                         checkLocationMask <<= 8;
                         locationValueOffset+= 8;
@@ -278,7 +278,7 @@ public class FastGameActions
         // Should be done now, return the line.
         return lineToMoveMerge;
 
-    }
+    }    
     // Function that combines a line of an array of lower and upper values into a single number holding the complete value.
     private ulong CombineLowerUpperIntoOne(ulong lowerValue, ulong upperValue)
     {
@@ -335,11 +335,66 @@ public class FastGameActions
         // Return string version of the game value.
         return value.ToString().PadLeft(6, '0');
     }
-    // Function that checks game over status from hexBoardArray. Only call this function if there are no empty spaces on the board.
+    // UNFINISHED Function that checks game over status from hexBoardArray. Only call this function if there are no empty spaces on the board. 
     public bool CheckGameOver(ulong[] hexBoardArray)
     {
 
 
         return false;
+    }
+    // Functions working with the HexBoard class. Only does the move and merge, does not place new block.
+    // Returns Hexboard after move-merge, ulong score after move-merge, and bool whether move and/or merge happened.
+    public (HexBoard, ulong, bool) MoveAndMerge (HexBoard originalBoard, ulong OriginalScore, MoveDirection direction)
+    {
+        // Set up variables we can work with.
+        ulong score = OriginalScore;
+        HexBoard board = originalBoard;
+        FullValueLines lines = new FullValueLines();
+        // If the direction is left or right, get rows.
+        if (direction == MoveDirection.Left || direction == MoveDirection.Right)
+        {
+            lines = HexBoardActions.GetFullValueRows(board);
+        }
+        // if the direction is up or down, get columns.
+        else
+        {
+            lines = HexBoardActions.GetFullValueColumns(board);            
+        }
+        // The lines are now ready for moving down or left, but need to be flipped for moving up or right.
+        if (direction == MoveDirection.Up || direction == MoveDirection.Right)
+        {
+            lines.FlipLines();
+        }
+
+        // After this, execute move and merge on the lines, note how much the score increased.
+        ulong scoreincrease = lines.MoveMergeLines();
+        score += scoreincrease;
+
+        // After the move merge, the hexboard needs to be rebuild from the lines.
+        // First, if the lines were flipped before, now flip them back.
+        if (direction == MoveDirection.Up || direction == MoveDirection.Right)
+        {
+            lines.FlipLines();
+        }
+        // Then rebuild from columns or rows depending on direction.
+        // If the direction is left or right, rebuild form rows.
+        if (direction == MoveDirection.Left || direction == MoveDirection.Right)
+        {
+            board = HexBoardActions.RebuildHexBoardFromFullValueRows(lines);
+        }
+        // if the direction is up or down, rebuild from columns.
+        else
+        {
+            board = HexBoardActions.RebuildHexBoardFromFullValueColumns(lines);
+        }
+        // Check if the board is still the same, and note the result.
+        bool changeHappened = false;
+        if (board.LSB != originalBoard.LSB || board.MSB != originalBoard.MSB) 
+        {
+            changeHappened = true;
+        }
+        // Return the results
+        return (board, score, changeHappened);
+
     }
 }

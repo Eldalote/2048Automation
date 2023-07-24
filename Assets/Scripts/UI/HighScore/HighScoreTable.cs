@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class HighScoreTable : MonoBehaviour
 {
-    // Container for the entries and the template for them. Found in code.
+    // Container for the entries and the template for them.
     [SerializeField] private Transform _entryContainer;
     [SerializeField] private HighScoreEntry _entryTemplate;
+
+    [SerializeField] private InputManager _inputManager;
 
     // Variables.
     private HighScoreEntry _headerEntry;
@@ -65,9 +67,17 @@ public class HighScoreTable : MonoBehaviour
     // Save the current score to the highscore.
     private void SaveGameEndScores()
     {
-        // Start by renaming current to player TODO: implement player/auto naming
+        // Start by renaming current to player or auto.
         ScoreEntry currentScore = _highScores.ScoreList.Find(x => x.Name == "Current");
-        currentScore.Name = "Player";
+        // If automated, save as Auto, else save as Player.
+        if (_inputManager.GetAutomatedStatus())
+        {
+            currentScore.Name = "Auto";
+        }
+        else
+        {
+            currentScore.Name = "Player";
+        }        
         // Then, if the number of entries is higher than the amount we should keep, drop the lowest.
         if (_highScores.ScoreList.Count > _numberOfScoresKept)
         {
