@@ -17,23 +17,7 @@ public static class MoveGenerator
             HexBoard resultBoard = new HexBoard();
             ulong resultScore = 0;
             bool moveSuccess = false;
-            MoveDirection direction = MoveDirection.None;
-            if (i == 0)
-            {
-                direction = MoveDirection.Left;
-            }
-            else if ( i == 1)
-            {
-                direction = MoveDirection.Up;
-            }
-            else if ( i == 2)
-            {
-                direction = MoveDirection.Right;
-            }
-            else if( i == 3)
-            {
-                direction = MoveDirection.Down;
-            }
+            MoveDirection direction = (MoveDirection)i;            
             (resultBoard, resultScore, moveSuccess) = HexBoardActions.MoveAndMerge(startBoard, startScore, direction);
             // If something happened (moveSuccess) then this is a valid move option. Add it to the List.
             if(moveSuccess)
@@ -41,7 +25,7 @@ public static class MoveGenerator
                 PlayerMoveOption moveOption = new PlayerMoveOption
                 {
                     BoardResult = resultBoard,
-                    ScoreResult = startScore + resultScore,
+                    ScoreResult = resultScore,
                     Direction = direction
                 };
                 moveOptions.Add(moveOption);

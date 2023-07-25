@@ -2284,7 +2284,7 @@ MonoBehaviour:
   _gameCamera: {fileID: 519420031}
   _backGroundGridBuilder: {fileID: 1806006427}
   _numBlocksManager: {fileID: 619322085}
-  _numBlockMoveSpeed: 25
+  _numBlockMoveSpeed: 206
 --- !u!1 &1562321049
 GameObject:
   m_ObjectHideFlags: 0

@@ -79,7 +79,8 @@ public class AutomatedMoveSearcher
             moveOptions = MoveGenerator.RandomPlacementOptions(board, score);
             if (moveOptions.Count == 0)
             {
-                // Game over scenario
+
+                // SOMETHING MAJOR WRONG HERE. If there are no places for a block to spawn, then there should have not been any valid moves by the player.
                 return negativeInfinity;
             }
 
