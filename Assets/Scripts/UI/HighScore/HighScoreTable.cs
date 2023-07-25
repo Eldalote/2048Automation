@@ -60,7 +60,11 @@ public class HighScoreTable : MonoBehaviour
         string readFromFile = string.Empty;
         FileManager.LoadFromFile(_highscoreSaveLocation, out readFromFile);
         _highScores.ScoreList.Clear();
-        _highScores = JsonUtility.FromJson<Highscores>(readFromFile);
+        if (readFromFile != string.Empty)
+        {
+            _highScores = JsonUtility.FromJson<Highscores>(readFromFile);
+        }
+        
         ScoreEntry  currentScore = new ScoreEntry {Score = 0, Name = "Current"};
         _highScores.ScoreList.Add(currentScore);
     }

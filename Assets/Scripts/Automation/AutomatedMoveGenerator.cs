@@ -33,7 +33,6 @@ public class AutomatedMoveGenerator
 
     private void FindMove(HexBoard hexBoard, ulong currentScore)
     {
-        Debug.Log("Starting search.");
         Stopwatch watch = new Stopwatch();
         watch.Start();
         AutomatedMoveSearcher searcher = new AutomatedMoveSearcher(hexBoard, currentScore);
