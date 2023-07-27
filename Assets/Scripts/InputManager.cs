@@ -15,6 +15,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private bool _managerReadyForInput = false;
     private AutomatedMoveGenerator _autoMoveGenerator;
     [SerializeField] private AutomationSettings _automationSettings;
+    [SerializeField] private bool threaded = false;
 
     // Awake, find the NumBlockManager, get the player input component and subscribe to it's events.
     private void Awake()
@@ -106,7 +107,7 @@ public class InputManager : MonoBehaviour
         ulong[] board = _numBlocksManager.GetCompactGamestate();
         HexBoard hexBoard = new HexBoard() { LSB = board[0], MSB = board[1] };
         ulong score = _numBlocksManager.GetScore();
-        _autoMoveGenerator.GenerateNextMove(hexBoard, score);
+        _autoMoveGenerator.GenerateNextMove(hexBoard, score, threaded);
     }
     // 
     private void ReadyForNewInput()
@@ -157,7 +158,7 @@ public class InputManager : MonoBehaviour
         ulong[] board = _numBlocksManager.GetCompactGamestate();
         HexBoard hexBoard = new HexBoard() { LSB = board[0], MSB = board[1] };
         ulong score = _numBlocksManager.GetScore();
-        _autoMoveGenerator.GenerateNextMove(hexBoard, score);
+        _autoMoveGenerator.GenerateNextMove(hexBoard, score, threaded);
     }
 
     public bool GetAutomatedStatus()

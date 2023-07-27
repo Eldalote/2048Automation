@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public static class MoveGenerator 
+public static class MoveOptionsGenerator 
 {
     
 

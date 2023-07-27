@@ -2564,6 +2564,7 @@ MonoBehaviour:
   _automatedMode: 0
   _managerReadyForInput: 0
   _automationSettings: {fileID: 11400000, guid: 6e2ca9b741d343a4ab604733f38394a8, type: 2}
+  threaded: 1
 --- !u!4 &1709968585
 Transform:
   m_ObjectHideFlags: 0

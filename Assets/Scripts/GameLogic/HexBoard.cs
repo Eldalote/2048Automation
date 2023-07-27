@@ -333,7 +333,7 @@ public static class HexBoardActions
         for (int i = 0; i < 16; i++)
         {
             // Check if the value of the space is 0, if it is, increment emptySpaces by one
-            if ((board.LSB & ((uint)0xF << (i * 4))) == 0 && (board.MSB & ((uint)0xF << (i * 4))) == 0)
+            if (((board.LSB & ((ulong)0xF << (i * 4))) == 0) && ((board.MSB & ((ulong)0xF << (i * 4))) == 0))
             {
                 emptySpaces++;
             } 

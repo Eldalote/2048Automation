@@ -23,20 +23,20 @@ public class AutomatedMoveGenerator
     public static NextMove nextMove;
     
 
-    public void GenerateNextMove(HexBoard hexBoard, ulong currentScore)
+    public void GenerateNextMove(HexBoard hexBoard, ulong currentScore, bool threaded)
     {
-        Task task = Task.Factory.StartNew(() => FindMove(hexBoard, currentScore));       
+        Task task = Task.Factory.StartNew(() => FindMove(hexBoard, currentScore, threaded));       
         Task.Delay(5000).ContinueWith((t) => StopMoveFinder());
         
 
     }
 
-    private void FindMove(HexBoard hexBoard, ulong currentScore)
+    private void FindMove(HexBoard hexBoard, ulong currentScore, bool threaded)
     {
         Stopwatch watch = new Stopwatch();
         watch.Start();
-        AutomatedMoveSearcher searcher = new AutomatedMoveSearcher(hexBoard, currentScore);
-        MoveDirection direction = searcher.StartSearch(hexBoard, currentScore);
+        AutomatedMoveSearcher searcher = new AutomatedMoveSearcher();
+        MoveDirection direction = searcher.StartSearch(hexBoard, currentScore, threaded);
 
         watch.Stop();
         TimeSpan timeSpan = watch.Elapsed;
