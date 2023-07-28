@@ -11,7 +11,7 @@ using System;
 
 public class AutomatedMoveGenerator 
 {
-    private AutomatedMoveSearcher _searcher;
+    private MoveSearcherOriginal _searcher;
 
     public AutomatedMoveGenerator() 
     {
@@ -33,11 +33,21 @@ public class AutomatedMoveGenerator
 
     private void FindMove(HexBoard hexBoard, ulong currentScore, bool threaded)
     {
+        int depth = 6;
+        MoveSearcherWorking searcherWorking = new MoveSearcherWorking();
+        MoveSearcherOriginal searcherOriginal = new MoveSearcherOriginal();              
         Stopwatch watch = new Stopwatch();
+        MoveDirection direction = MoveDirection.Left;
         watch.Start();
-        AutomatedMoveSearcher searcher = new AutomatedMoveSearcher();
-        MoveDirection direction = searcher.StartSearch(hexBoard, currentScore, threaded);
-
+        if (threaded)
+        {
+            direction = searcherWorking.StartSearch(hexBoard, currentScore, depth, true);
+            //direction = moveSearcherThreadedDoubleParalell.StartSearch(hexBoard, currentScore, depth);
+        }
+        else
+        {
+            direction = searcherOriginal.StartSearch(hexBoard, currentScore, depth);            
+        }
         watch.Stop();
         TimeSpan timeSpan = watch.Elapsed;
         Debug.Log($"Search complete: Direction: {direction}, Time taken, seconds: {timeSpan.Seconds}, millis: {timeSpan.Milliseconds}");

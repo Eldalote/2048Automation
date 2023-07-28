@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using Debug = UnityEngine.Debug;
 
 public class InputManager : MonoBehaviour
 {
@@ -35,8 +38,32 @@ public class InputManager : MonoBehaviour
         AutomatedMoveGenerator.nextMove += ReceiveAutomatedInput; 
         // Create new automovegenerator.
         _autoMoveGenerator = new AutomatedMoveGenerator();
-        
-        
+
+
+        // TESTING
+        int depth = 6;
+        HexBoard testingBoard = new HexBoard { LSB = 0x506010111, MSB = 0};
+        ulong testingScore = 0;
+        MoveSearcherWorking searcherWorking = new MoveSearcherWorking();
+        MoveSearcherOriginal searcherOriginal = new MoveSearcherOriginal();
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+        MoveDirection direction = searcherWorking.StartSearch(testingBoard, testingScore, depth, true);
+        watch.Stop();
+        TimeSpan timeSpan = watch.Elapsed;
+        Debug.Log($"Search Working: Direction: {direction}, Time taken, seconds: {timeSpan.Seconds}, millis: {timeSpan.Milliseconds}");
+        watch.Reset();
+        watch.Start();
+        direction = searcherOriginal.StartSearch(testingBoard, testingScore, depth);
+        watch.Stop();
+        timeSpan = watch.Elapsed;
+        Debug.Log($"Search original: Direction: {direction}, Time taken, seconds: {timeSpan.Seconds}, millis: {timeSpan.Milliseconds}");
+
+
+
+
+
+
     }
 
     private void MoveRight_performed(InputAction.CallbackContext context)
