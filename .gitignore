@@ -26,6 +26,11 @@
 # Visual Studio cache directory
 .vs/
 
+#SearchEngine
+/SearchEngine/.vs/
+/SearchEngine/bin/
+/SearchEngine/obj/
+
 # Gradle cache directory
 .gradle/
 

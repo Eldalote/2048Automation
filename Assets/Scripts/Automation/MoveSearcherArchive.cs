@@ -22,13 +22,13 @@ public class MoveSearcherOriginal
     private MoveDirection _bestDirection = MoveDirection.None;
 
 
-    public MoveDirection StartSearch(HexBoard board, ulong score, int depth)
+    public (MoveDirection, uint, int) StartSearch(HexBoard board, ulong score, int depth)
     {
 
         int eval = SearchMovesTopLevel(depth, board, score);
 
-        Debug.Log($"Total end states evaluated: {_nodesSearched}, end eval: {eval}");
-        return _bestDirection;
+        //Debug.Log($"Total end states evaluated: {_nodesSearched}, end eval: {eval}");
+        return (_bestDirection, _nodesSearched, eval);
 
 
     }
@@ -133,7 +133,7 @@ public class MoveSearcherThreadedDoubleParalell
 
 
     // Simply starts the search, and gives the answer back, optionally with some debug logging.
-    public MoveDirection StartSearch(HexBoard board, ulong score, int depth)
+    public (MoveDirection, uint, int) StartSearch(HexBoard board, ulong score, int depth)
     {
         int eval;
         uint nodesSearched;
@@ -141,7 +141,7 @@ public class MoveSearcherThreadedDoubleParalell
         (bestDirection, nodesSearched, eval) = SearchMovesTopLevel(depth, board, score);
         Debug.Log($"Total end states evaluated: {nodesSearched}, end eval: {eval}");
         //Console.WriteLine($"Total end states evaluated: {nodesSearched}, end eval: {eval}, end direction {bestDirection}.");
-        return bestDirection;
+        return (bestDirection, nodesSearched, eval);
 
     }
 

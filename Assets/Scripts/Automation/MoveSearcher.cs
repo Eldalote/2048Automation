@@ -21,15 +21,15 @@ public class MoveSearcherWorking
 
 
     // Simply starts the search, and gives the answer back, optionally with some debug logging.
-    public MoveDirection StartSearch(HexBoard board, ulong score, int depth, bool doubleDeepParallel)
+    public (MoveDirection, uint, int) StartSearch(HexBoard board, ulong score, int depth, bool doubleDeepParallel)
     {
-        int eval;
+        int evaluation;
         uint nodesSearched;
         MoveDirection bestDirection;
-        (bestDirection, nodesSearched, eval) = SearchMovesTopLevel(depth, board, score, doubleDeepParallel);
-        Debug.Log($"Total end states evaluated: {nodesSearched}, end eval: {eval}, doubleparallel on: {doubleDeepParallel}");
+        (bestDirection, nodesSearched, evaluation) = SearchMovesTopLevel(depth, board, score, doubleDeepParallel);
+        //Debug.Log($"Total end states evaluated: {nodesSearched}, end eval: {evaluation}, doubleparallel on: {doubleDeepParallel}");
         //Console.WriteLine($"Total end states evaluated: {nodesSearched}, end eval: {eval}, end direction {bestDirection}.");
-        return bestDirection;
+        return (bestDirection, nodesSearched, evaluation);
 
     }
 
