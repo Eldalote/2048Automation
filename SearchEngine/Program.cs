@@ -1,50 +1,26 @@
-﻿class program
+﻿using BenchmarkDotNet.Running;
+
+class Program
 {
     static void Main(String[] args)
     {
-        
-        
-        Console.WriteLine("Ready Searcher");
 
-        string received;
-        while ((received = Console.ReadLine())  != null)
+        if (args.Length == 0)
         {
-            string[] subStrings = received.Split(" ");
-            if (subStrings[0] == "Search")
+            CommunicationManager communicationManager = new CommunicationManager();
+            communicationManager.StartCommunications();
+        }
+        else
+        {
+            foreach (string arg in args)
             {
-                Random random = new Random();
-                int rand = random.Next(0, 4);
-                switch (rand)
+                if (arg == "BenchmarkDotNet")
                 {
-                    case 0:
-                        {
-                            Console.WriteLine("BestMove Up");
-                            break;
-                        }
-                    case 1:
-                        {
-                            Console.WriteLine("BestMove Down");
-                            break;
-                        }
-                    case 2:
-                        {
-                            Console.WriteLine("BestMove Right");
-                            break;
-                        }
-                    case 3:
-                        {
-                            Console.WriteLine("BestMove Left");
-                            break;
-                        }
-                        
+                    BenchmarkRunner.Run<Benchmarks>();
                 }
             }
-            else
-            {
-                Console.WriteLine(received);
-            }
         }
-        
+
         
     }
 }

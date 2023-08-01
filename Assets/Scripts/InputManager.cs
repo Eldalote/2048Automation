@@ -23,7 +23,7 @@ public class InputManager : MonoBehaviour
     private Process _searcherProcess;
     private Process _builderProcess;
     private StreamWriter _searcherStreamWriter;
-    private string _nextSearcherCommand;
+    private string _nextSearcherCommand = "";
     private int _searcherThreadedOption = 0;
     private bool _searcherWaitingForCommand = false;
 
@@ -167,10 +167,7 @@ public class InputManager : MonoBehaviour
     public void StartSearcher()
     {
         // If a search process is already running, kill it, then start a new one.
-        if (_searcherProcess != null)
-        {
-            _searcherProcess.Kill();
-        }
+        KillSearcher();
 
         // Get path to folder, this is the /Assets folder, so the last part needs to be removed.
         String searcherPath = Application.dataPath;            
@@ -179,7 +176,7 @@ public class InputManager : MonoBehaviour
         searcherPath += "/SearchEngine/bin/Release/net7.0/SearchEngine.exe";
         // Set process start options
         ProcessStartInfo searcherStartInfo = new ProcessStartInfo(searcherPath);
-        searcherStartInfo.CreateNoWindow = false;
+        searcherStartInfo.CreateNoWindow = true;
         searcherStartInfo.UseShellExecute = false;
         searcherStartInfo.RedirectStandardOutput = true;
         searcherStartInfo.RedirectStandardInput = true;
@@ -201,8 +198,26 @@ public class InputManager : MonoBehaviour
                 
     }
 
+    public void KillSearcher()
+    {
+        if (_searcherProcess != null)
+        {
+            try
+            {
+                _searcherProcess.Kill();
+            }
+            catch (Exception e)
+            {
+                //Debug.Log($"Error killing process: {e}");
+            }
+
+        }
+    }
+
     public void BuildSearcher()
     {
+        // First kill the searcher if already running, else it can't be built.
+        KillSearcher(); 
         // Get path to folder, this is the /Assets folder, so the last part needs to be removed.
         String builderPath = Application.dataPath;        
         builderPath = builderPath.Substring(0, builderPath.LastIndexOf('/'));
@@ -266,6 +281,8 @@ public class InputManager : MonoBehaviour
                         }
                         // Send the input to the blockmanager.
                         ReceiveAutomatedInput(direction);
+                        // Since this was a conclusion to a search, the searcher is now ready, so check if a new command is waiting.
+                        _searcherWaitingForCommand = !SendWaitingSearcherCommand();
                         break;
                     }
                 case "Ready":
@@ -293,7 +310,8 @@ public class InputManager : MonoBehaviour
     {
         if (_searcherWaitingForCommand)
         {
-            _searcherStreamWriter.WriteLine(_nextSearcherCommand);
+            _searcherStreamWriter.WriteLine(command);
+            _searcherWaitingForCommand= false;
         }
         else
         {
@@ -305,17 +323,25 @@ public class InputManager : MonoBehaviour
     {
         if (_nextSearcherCommand.Length > 1)
         {
+            
             _searcherStreamWriter.WriteLine(_nextSearcherCommand);
-            _nextSearcherCommand = "";
+            _nextSearcherCommand = "";            
             return true;
         }
         else
-        {
+        {            
             return false;
         }
     }
 
     public bool GetAutomatedStatus()
     { return _automatedMode; }
+
+    private void OnDestroy()
+    {
+        KillSearcher();
+        Debug.Log("Searcher Killed");
+        
+    }
 
 }
