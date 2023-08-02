@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
-
-public static class PositionEvaluator 
+namespace SearchEngine.Scripts
 {
-   
-    public static int EvaluatePosition(HexBoard board, ulong score)
+    public static class PositionEvaluator
     {
-        return (int)score;
-    }
 
+        public static int EvaluatePosition(HexBoard board, ulong score)
+        {
+            return (int)score;
+        }
+
+    }
 }

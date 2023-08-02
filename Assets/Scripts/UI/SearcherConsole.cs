@@ -9,6 +9,8 @@ public class SearcherConsole : MonoBehaviour
     private TextMeshProUGUI _consoleTextTMPUI;
     private string _consoleText = "";
 
+    private int _maxConsoleLength = 12;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -28,17 +30,22 @@ public class SearcherConsole : MonoBehaviour
     {
         //Debug.Log(text);
         string[] lines = _consoleText.Split("Searcher:");
-        _consoleText = "Searcher:  " +  text + "\n\n";        
+        _consoleText = "";
         if (lines.Length > 0)
         {
-            for (int i = 1; i < lines.Length; i++)
+            int cutOff = 0;
+            if (lines.Length >= _maxConsoleLength) 
             {
-                if (i < 10)
-                {
-                    _consoleText += "Searcher:"+ lines[i];
-                }
+                cutOff = 1 + lines.Length - _maxConsoleLength;
+            }
+            for (int i = 1 + cutOff; i < lines.Length; i++)
+            {
+                
+                _consoleText += "Searcher:"+ lines[i];
+                
             }
         }
+        _consoleText += "Searcher:  " + text + "\n\n";
         Debug.Log(_consoleText);
     }
 }
