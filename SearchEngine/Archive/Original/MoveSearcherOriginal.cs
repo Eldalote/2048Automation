@@ -27,7 +27,7 @@ namespace SearchEngine.Archive.Original
             _nodesSearched = 0;
             int eval = SearchMovesTopLevel(depth, board, score);
 
-            //Debug.Log($"Total end states evaluated: {_nodesSearched}, end eval: {eval}");
+            Console.WriteLine($"Total end states evaluated: {_nodesSearched}, end eval: {eval}");
             return (_bestDirection, _nodesSearched, eval);
 
 

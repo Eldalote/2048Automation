@@ -46,9 +46,28 @@ namespace SearchEngine.Scripts
             SearchSettings searchSettings = new SearchSettings();
             searchSettings.ThreadedDoubleDepth = false;
             searchSettings.MaxSearchDepth = depth;
-            searchSettings.UseIterativeDeepening = false;
+            searchSettings.UseIterativeDeepening = true;
+            searchSettings.UseThreading = false;
 
             // First the original.
+
+
+            // Short tests
+            HexBoard shortTest = new HexBoard(1463988815018590998, 0);
+            HexBoard followUp = new(1320157434603573762, 0);
+            HexBoard fill1 = new(1320157434603573778, 0);
+            HexBoard fill2 = new(1320157434603573794, 0);
+            string testString = HexBoardActions.PrintHexBoard(shortTest, false);
+            Console.WriteLine(testString);
+            testString = HexBoardActions.PrintHexBoard(followUp, false);
+            Console.WriteLine(testString);
+            testString = HexBoardActions.PrintHexBoard(fill1, false);
+            Console.WriteLine(testString);
+            testString = HexBoardActions.PrintHexBoard(fill2, false);
+            Console.WriteLine(testString);
+            moveSearcherWorking.StartSearch(shortTest, searchSettings);
+
+            return;
 
             stopwatch.Start();
             uint previousTotalNodes = 0;
@@ -91,6 +110,8 @@ namespace SearchEngine.Scripts
 
             // Then the working, deepening.
             searchSettings.UseIterativeDeepening = true;
+            searchSettings.ThreadedDoubleDepth = false;
+            searchSettings.UseThreading = false;
             stopwatch.Start();
             uint workingDoubleTotalNodes = 0;
             int workingDoubleEvaluation = 0;

@@ -24,6 +24,7 @@ namespace SearchEngine.Scripts
                 {
                     case "Search":
                         {
+                            Console.WriteLine("Received Command: " + received);
                             InterpretSearchCommand(subStrings);
                             break;
                         }

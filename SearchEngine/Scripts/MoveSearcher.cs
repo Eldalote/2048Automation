@@ -12,8 +12,9 @@ namespace SearchEngine.Scripts
         /// Mini-max recursive searching.
         /// Parallel multithreading, double deep. (The first max 4 options are split into threads, and each followup random placement too.)
         /// Optional double deep parallelisation, double deep is probably slower on lower core count systems.
+        /// Threading fully optional.
         /// Alpha-Beta Pruning (basic)
-        /// Iterative Deepening
+        /// Iterative Deepening with basic move ordering. A list of best moves in the previous search is kept and used first, hopefully pruning more.
         /// </summary>
 
 
@@ -22,6 +23,8 @@ namespace SearchEngine.Scripts
         const int negativeInfinity = -positiveInfinity;
 
         private bool _useIterativeDeepening = false;
+        private bool _useThreading = true;
+        private MoveDirection _bestDirectionNonThreaded = MoveDirection.None;
 
 
         // Simply starts the search, and gives the answer back, optionally with some debug logging.   
@@ -48,15 +51,20 @@ namespace SearchEngine.Scripts
             }
 
 
-            // TESTING:
-            //uint nodesSearched;
-            //int evaluation;            
-            //(nodesSearched, evaluation) = SearchMoveIterativeLevel(maxSearchDepth, board, 0, true, negativeInfinity, positiveInfinity);
-            //return (MoveDirection.None, nodesSearched, evaluation);
+            if (settings.UseThreading == false)
+            {
+                uint nodesSearched;
+                int evaluation;
+                _useThreading = false;
+                (nodesSearched, evaluation) = SearchMoveIterativeLevel(maxSearchDepth, board, 0, true, negativeInfinity, positiveInfinity);
+                return (_bestDirectionNonThreaded, nodesSearched, evaluation);
+            }
 
-            
 
 
+
+
+            _useThreading = true;
             return SearchMovesTopLevel(settings.MaxSearchDepth, board, 0, settings.ThreadedDoubleDepth, negativeInfinity, positiveInfinity);
 
         }
@@ -86,8 +94,7 @@ namespace SearchEngine.Scripts
             // This is the player, or the maximizing player in mini-max
             if (playerToMove)
             {
-                // start with baseline best move of 0;
-                bestDirectionOrPlacement = 0;
+                
                 // Start of with the worst possible evaluation, look for beter ones.
                 bestEvaluation = negativeInfinity;
                 // Generate a list with all possible move options, starting with the one that was best last time.
@@ -109,6 +116,8 @@ namespace SearchEngine.Scripts
                 {
                     return (0, negativeInfinity, moveDirectionsList);
                 }
+                // start with baseline best move of the first option;
+                bestDirectionOrPlacement = (int)moveOptions[0].Direction;
                 // Loop over the possible move options.
                 for (int i = 0; i < moveOptions.Count; i++)
                 {
@@ -168,7 +177,7 @@ namespace SearchEngine.Scripts
                         bestEvaluation = evaluation;
                         bestDirectionOrPlacement = moveOptions[i].Placement;
                     }
-                    // If the current bestEvaluation is lower than alpha, it means that this branch is already worse than the previous branch, so stop looking.
+                    // If the current bestEvaluation is lower than alpha, it means that this branch is already worse for the maximizing player than the previous branch, so stop looking.
                     if (bestEvaluation < alpha)
                     {
                         break;
@@ -266,6 +275,17 @@ namespace SearchEngine.Scripts
                 (nodesThisSearch, evaluation, bestMovesList) = SearchMoves(searchDepth, board, score, playerToMove, bestMovesList, alpha, beta);
                 totalNodesSearched += nodesThisSearch;
             }
+            if (_useThreading == false)
+            {
+                if (bestMovesList.Count > 0)
+                {
+                    _bestDirectionNonThreaded = (MoveDirection)bestMovesList[0];
+                }
+                else
+                {
+                    _bestDirectionNonThreaded = MoveDirection.None;
+                }
+            }
             // After all the searches, return the total nodes, and the last evaluation.
             return (totalNodesSearched, evaluation);
         }
@@ -286,8 +306,8 @@ namespace SearchEngine.Scripts
             {
                 int eval;
                 uint nodesThisSearch;                
-                //(nodesThisSearch, eval) = SearchMoveIterativeLevel(depth - 1, move.BoardResult, move.Score, true, alpha, beta);
-                (nodesThisSearch, eval, _) = SearchMoves(depth - 1, move.BoardResult, move.Score, true, new List<int>(), alpha, beta);
+                (nodesThisSearch, eval) = SearchMoveIterativeLevel(depth - 1, move.BoardResult, move.Score, true, alpha, beta);
+                //(nodesThisSearch, eval, _) = SearchMoves(depth - 1, move.BoardResult, move.Score, true, new List<int>(), alpha, beta);
                 nodesSearched += nodesThisSearch;
                 // Get results, store them in list for comparisson once all are in.
                 evaluationList.Add(eval);

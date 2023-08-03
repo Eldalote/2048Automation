@@ -13,14 +13,16 @@ namespace SearchEngine.Scripts
         public bool SearchToMaxTime;
         public int SearchTimeMillies;
         public bool UseIterativeDeepening;
+        public bool UseThreading;
 
 
         public SearchSettings() 
         {
-            ThreadedDoubleDepth = true;
+            ThreadedDoubleDepth = false;
             MaxSearchDepth = 8;
             SearchToMaxTime = false;
             UseIterativeDeepening = true;
+            UseThreading = false;
         }
     }
 }

@@ -34,6 +34,8 @@ public class NumBlocksManager : MonoBehaviour
     
     [SerializeField] private ulong _currentScore = 0;
 
+    private ulong[] _lastBoardstateBeforeGameOver = new ulong[2];
+
     // Enum for returning status of the system to external scripts.
     public enum ResultCode
     { 
@@ -204,6 +206,9 @@ public class NumBlocksManager : MonoBehaviour
         // Send gameOver event.
         gameOver?.Invoke();
         _gameOver = true;
+        ulong[] boardState = GetCompactGamestate();
+        Debug.Log($"Last Boardstate before game over: LSB: {_lastBoardstateBeforeGameOver[0]:X} MSB: {_lastBoardstateBeforeGameOver[1]:X}");
+        Debug.Log($"Game over boardstate: LSB: {boardState[0]:X} MSB: {boardState[1]:X}");
         return true;
     }    
     // Function to destroy the block identified by the key, and remove it from the list.
@@ -247,6 +252,8 @@ public class NumBlocksManager : MonoBehaviour
         NumBlock movingBlock;
 
         bool hasMovedOrMerged = false;
+
+        _lastBoardstateBeforeGameOver = GetCompactGamestate();
 
         // Set the location where we start looking, and in which direction we look. If the blocks are to be moved up,
         // start top left, then go down in the "row", and after that right to the next "row". I call it "row" with ""

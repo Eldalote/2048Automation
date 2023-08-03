@@ -5,7 +5,7 @@ using System.Runtime.ExceptionServices;
 
 namespace SearchEngine.Scripts
 {
-    public struct HexBoard
+    public class HexBoard
     {
         private ulong[] ulongArray;
 
@@ -29,6 +29,13 @@ namespace SearchEngine.Scripts
         public HexBoard()
         {
             ulongArray = new ulong[2] { 0, 0};
+        }
+
+        public HexBoard(HexBoard copyIn)
+        {
+            ulongArray = new ulong[2];
+            ulongArray[0] = copyIn.LSB;
+            ulongArray[1] = copyIn.MSB;
         }
 
 
@@ -171,11 +178,11 @@ namespace SearchEngine.Scripts
 
         // Functions working with the HexBoard class. Only does the move and merge, does not place new block.
         // Returns Hexboard after move-merge, ulong score after move-merge, and bool whether move and/or merge happened.
-        public static (HexBoard, ulong, bool) MoveAndMerge(HexBoard originalBoard, ulong OriginalScore, MoveDirection direction)
+        public static (HexBoard, ulong, bool) MoveAndMerge(HexBoard originalBoard, ulong originalScore, MoveDirection direction)
         {
             // Set up variables we can work with.
-            ulong score = OriginalScore;
-            HexBoard board = originalBoard;
+            ulong score = originalScore;
+            HexBoard board = new HexBoard(originalBoard);
             FullValueLines lines = new FullValueLines();
             // If the direction is left or right, get rows.
             if (direction == MoveDirection.Left || direction == MoveDirection.Right)
@@ -244,16 +251,17 @@ namespace SearchEngine.Scripts
         public static HexBoard SpawnNewBlock(HexBoard board, int locationRandom, int valueRandom)
         {
             int countDown = locationRandom;
-            HexBoard workingBoard = new HexBoard(board.LSB, board.MSB);
+            HexBoard workingBoard = new HexBoard(board);
             // Loop over every space.
             for (int i = 0; i < 16; i++)
             {
-                // Check if the value of the space is 0, if it is, check countDown. If countdown is 0, place new block here, if not, countDown--
-                if ((board.LSB & ((uint)0xF << (i * 4))) == 0 && (board.MSB & ((uint)0xF << (i * 4))) == 0)
+                // Check if the value of the space is 0, if it is, check countDown. If countdown is 0, place new block here, if not, countDown--                
+                if ((board.LSB & ((ulong)0xF << (i * 4))) == 0 && (board.MSB & ((ulong)0xF << (i * 4))) == 0)
                 {
                     if (countDown == 0)
                     {
                         workingBoard.LSB += (ulong)valueRandom << (i * 4);
+                        return workingBoard;
                     }
                     else
                     {
