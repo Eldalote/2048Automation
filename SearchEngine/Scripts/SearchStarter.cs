@@ -25,7 +25,7 @@ namespace SearchEngine.Scripts
 
         private void ActualStarter(HexBoard board, SearchSettings settings)
         {
-            MoveSearcher moveSearcher = new MoveSearcher();
+            MoveSearchMiniMax moveSearcher = new MoveSearchMiniMax();
             MoveDirection direction;
             uint nodesSearched;
             int evaluation;

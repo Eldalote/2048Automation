@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 namespace SearchEngine.Scripts
 {
-    public class MoveSearcher
+    public class MoveSearchMiniMax
     {
         /// <summary>
-        /// Most up to date version of the move searcher. 
+        /// Most up to date version of the move searcher, Minimax version. 
         /// Features:
         /// Mini-max recursive searching.
         /// Parallel multithreading, double deep. (The first max 4 options are split into threads, and each followup random placement too.)
@@ -102,11 +102,11 @@ namespace SearchEngine.Scripts
                 List<PlayerMoveOption> moveOptions;
                 if (moveOrderInputList.Count == 0) 
                 {
-                    moveOptions = MoveOptionsGenerator.PlayerMoveOptions(board, score, 0);
+                    moveOptions = MoveOptionsGeneratorWithMoveOrder.GeneratePlayerMoveOptionsWithMoveOrder(board, score, 0);
                 }
                 else
                 {
-                    moveOptions = MoveOptionsGenerator.PlayerMoveOptions(board, score, moveOrderInputList[0]);
+                    moveOptions = MoveOptionsGeneratorWithMoveOrder.GeneratePlayerMoveOptionsWithMoveOrder(board, score, moveOrderInputList[0]);
                 }
                
 
@@ -157,11 +157,11 @@ namespace SearchEngine.Scripts
                 List<RandomPlacementOption> moveOptions;
                 if (moveOrderInputList.Count == 0)
                 {
-                    moveOptions = MoveOptionsGenerator.RandomPlacementOptions(board, score, 0x10);
+                    moveOptions = MoveOptionsGeneratorWithMoveOrder.RandomPlacementOptionsWithMoveOrder(board, score, 0x10);
                 }
                 else
                 {
-                    moveOptions = MoveOptionsGenerator.RandomPlacementOptions(board, score, moveOrderInputList[0]);
+                    moveOptions = MoveOptionsGeneratorWithMoveOrder.RandomPlacementOptionsWithMoveOrder(board, score, moveOrderInputList[0]);
                 }
                 // Loop over the possibilities.
                 for (int i = 0; i < moveOptions.Count; i++)
@@ -204,7 +204,7 @@ namespace SearchEngine.Scripts
             // Start with worst possible.
             int bestEvaluation = negativeInfinity;
             // Generate list of all possible moves.
-            List<PlayerMoveOption> moveOptions = MoveOptionsGenerator.PlayerMoveOptions(board, score, 0);
+            List<PlayerMoveOption> moveOptions = MoveOptionsGeneratorWithMoveOrder.GeneratePlayerMoveOptionsWithMoveOrder(board, score, 0);
             // Make list for results for each move. Since the searches are parallel, it cannot be relied upon that they are resolve in a predictable order.
             List<Results> resultList = new List<Results>();
             // Do a search for each possible move on a seperate parallel thread.
@@ -298,7 +298,7 @@ namespace SearchEngine.Scripts
             int bestEvaluation = positiveInfinity;
             // Get all moves.
             List<RandomPlacementOption> moveOptions = new List<RandomPlacementOption>();
-            moveOptions = MoveOptionsGenerator.RandomPlacementOptions(board, score, 0x10);
+            moveOptions = MoveOptionsGeneratorWithMoveOrder.RandomPlacementOptionsWithMoveOrder(board, score, 0x10);
             // Store results in a list.
             List<int> evaluationList = new List<int>();
             // Split all searches into parallel threads.

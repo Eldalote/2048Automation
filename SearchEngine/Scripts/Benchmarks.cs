@@ -19,12 +19,12 @@ namespace SearchEngine.Scripts
         private ulong scoreToTest = 0;
         private int depthToTest = 6;
 
-        private static readonly MoveSearcher moveSearcherWorking = new MoveSearcher();
+        private static readonly MoveSearchMiniMax moveSearcherWorking = new MoveSearchMiniMax();
         private static readonly Archive.Original.MoveSearcherOriginal moveSearcherOriginal = new Archive.Original.MoveSearcherOriginal();
         private static readonly Archive.Original.MoveSearcherOriginalThreaded moveSearcherOriginalThreaded = new Archive.Original.MoveSearcherOriginalThreaded();
         private static readonly Archive.PreviousVersion.MoveSearcherPreviousVersion moveSearcherPreviousVersion = new Archive.PreviousVersion.MoveSearcherPreviousVersion();
 
-        private SearchSettings searchSettingsCurrent = new SearchSettings { UseIterativeDeepening = true, MaxSearchDepth = 6, ThreadedDoubleDepth = false };
+        private SearchSettings searchSettingsCurrent = new SearchSettings { UseIterativeDeepening = true, MaxSearchDepth = 6, ThreadedDoubleDepth = false, UseThreading = true };
 
         public void InUnityBenchmark(int depth)
         {         
@@ -47,7 +47,7 @@ namespace SearchEngine.Scripts
             searchSettings.ThreadedDoubleDepth = false;
             searchSettings.MaxSearchDepth = depth;
             searchSettings.UseIterativeDeepening = true;
-            searchSettings.UseThreading = false;
+            searchSettings.UseThreading = true;
 
             // First the original.
 
@@ -67,7 +67,7 @@ namespace SearchEngine.Scripts
             Console.WriteLine(testString);
             moveSearcherWorking.StartSearch(shortTest, searchSettings);
 
-            return;
+            //return;
 
             stopwatch.Start();
             uint previousTotalNodes = 0;
@@ -157,7 +157,7 @@ namespace SearchEngine.Scripts
             moveSearcherOriginal.StartSearch(hexBoardToTestOriginal, scoreToTest, depthToTest);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public void FirstThreadedVersion()
         {
             moveSearcherOriginalThreaded.StartSearch(hexBoardToTestOriginal, scoreToTest, depthToTest, true);
