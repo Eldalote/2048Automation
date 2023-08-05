@@ -40,7 +40,7 @@ namespace SearchEngine.Archive.PreviousVersion
             int evaluation;
             uint nodesSearched;
             MoveDirection bestDirection;
-            (bestDirection, nodesSearched, evaluation) = SearchMovesTopLevel(settings.MaxSearchDepth, board, 0, settings.ThreadedDoubleDepth, negativeInfinity, positiveInfinity);
+            (bestDirection, nodesSearched, evaluation) = SearchMovesTopLevel(settings.SearchDepth, board, 0, settings.ThreadedDoubleDepth, negativeInfinity, positiveInfinity);
             return (bestDirection, nodesSearched, evaluation);
 
         }

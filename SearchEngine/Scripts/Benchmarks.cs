@@ -24,7 +24,7 @@ namespace SearchEngine.Scripts
         private static readonly Archive.Original.MoveSearcherOriginalThreaded moveSearcherOriginalThreaded = new Archive.Original.MoveSearcherOriginalThreaded();
         private static readonly Archive.PreviousVersion.MoveSearcherPreviousVersion moveSearcherPreviousVersion = new Archive.PreviousVersion.MoveSearcherPreviousVersion();
 
-        private SearchSettings searchSettingsCurrent = new SearchSettings { UseIterativeDeepening = true, MaxSearchDepth = 6, ThreadedDoubleDepth = false, UseThreading = true };
+        private SearchSettings searchSettingsCurrent = new SearchSettings { UseIterativeDeepening = true, SearchDepth = 6, ThreadedDoubleDepth = false, UseThreading = true };
 
         public void InUnityBenchmark(int depth)
         {         
@@ -45,7 +45,7 @@ namespace SearchEngine.Scripts
             Stopwatch stopwatch = new Stopwatch();
             SearchSettings searchSettings = new SearchSettings();
             searchSettings.ThreadedDoubleDepth = false;
-            searchSettings.MaxSearchDepth = depth;
+            searchSettings.SearchDepth = depth;
             searchSettings.UseIterativeDeepening = true;
             searchSettings.UseThreading = true;
 

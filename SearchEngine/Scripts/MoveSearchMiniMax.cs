@@ -36,18 +36,18 @@ namespace SearchEngine.Scripts
             // If Iterative deepening is used, the searchDepth needs to be at least 4, so check to make sure it is, correct if not.
             if (_useIterativeDeepening)
             {
-                if (settings.MaxSearchDepth < 4)
+                if (settings.SearchDepth < 4)
                 {
                     maxSearchDepth = 4;
                 }
                 else
                 {
-                    maxSearchDepth = settings.MaxSearchDepth;
+                    maxSearchDepth = settings.SearchDepth;
                 }
             }
             else
             {
-                maxSearchDepth = settings.MaxSearchDepth;
+                maxSearchDepth = settings.SearchDepth;
             }
 
 
@@ -65,7 +65,7 @@ namespace SearchEngine.Scripts
 
 
             _useThreading = true;
-            return SearchMovesTopLevel(settings.MaxSearchDepth, board, 0, settings.ThreadedDoubleDepth, negativeInfinity, positiveInfinity);
+            return SearchMovesTopLevel(settings.SearchDepth, board, 0, settings.ThreadedDoubleDepth, negativeInfinity, positiveInfinity);
 
         }
 

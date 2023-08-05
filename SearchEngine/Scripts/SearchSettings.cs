@@ -9,20 +9,25 @@ namespace SearchEngine.Scripts
     public class SearchSettings
     {
         public bool ThreadedDoubleDepth;
-        public int MaxSearchDepth;
+        public int SearchDepth;
         public bool SearchToMaxTime;
         public int SearchTimeMillies;
         public bool UseIterativeDeepening;
         public bool UseThreading;
+        public int ThreadSplitDepth;
+        public int MaxDepthIterativeDeepening;
 
 
         public SearchSettings() 
         {
             ThreadedDoubleDepth = false;
-            MaxSearchDepth = 8;
+            SearchDepth = 8;
             SearchToMaxTime = false;
+            SearchTimeMillies = 600;
             UseIterativeDeepening = true;
             UseThreading = false;
+            ThreadSplitDepth = 2;
+            MaxDepthIterativeDeepening = 35;
         }
     }
 }

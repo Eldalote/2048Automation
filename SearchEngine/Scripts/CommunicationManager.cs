@@ -42,6 +42,24 @@ namespace SearchEngine.Scripts
                             Console.WriteLine("Ready Benchmark Done");
                             break;
                         }
+                    case "Expectimax":
+                        {
+                            SearchSettings settings = new();
+                            settings.SearchTimeMillies = 5000;
+                            settings.UseThreading = true;
+                            settings.ThreadSplitDepth = 1;
+                            settings.MaxDepthIterativeDeepening = 10000;
+                            settings.SearchToMaxTime = true;
+                            MoveSearchExpectiMax searcher = new(settings);
+                            HexBoard board = new(0x0202, 0);
+                            int i;
+                            uint u;
+                            MoveDirection m;
+                            (i,u,m) = searcher.StartSearch(board, settings);
+                            Console.WriteLine($"{i}, {u}, {m}");
+
+                            break;
+                        }
                     default:
                         {
                             Console.WriteLine($"Message received: {received}");
@@ -66,7 +84,7 @@ namespace SearchEngine.Scripts
                     if (settingsSplit[1].StartsWith("ToMaxDepth")) 
                     {
                         searchSettings.SearchToMaxTime = false;
-                        searchSettings.MaxSearchDepth = Convert.ToInt32(settingsSplit[2]);
+                        searchSettings.SearchDepth = Convert.ToInt32(settingsSplit[2]);
                     }
                     else if (settingsSplit[1].StartsWith("ToMaxTime"))
                     {

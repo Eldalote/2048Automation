@@ -41,7 +41,7 @@ namespace SearchEngine.Scripts
             }
             else
             {
-                resultString += $"Searched to depth: {settings.MaxSearchDepth}. ";
+                resultString += $"Searched to depth: {settings.SearchDepth}. ";
             }
             resultString += $"Nodes: {nodesSearched}, Evaluation: {evaluation}, Time: {timeSpan.Seconds}s, {timeSpan.Milliseconds}ms.";
             Console.WriteLine(resultString);
