@@ -33,11 +33,11 @@ namespace SearchEngine.Scripts
                             Benchmarks benchmarks = new Benchmarks();
                             if(subStrings.Length < 2)
                             {
-                                benchmarks.InUnityBenchmark(6);
+                                benchmarks.ManualBenchmark(6);
                             }
                             else
                             {
-                                benchmarks.InUnityBenchmark(Convert.ToInt32(subStrings[1]));
+                                benchmarks.ManualBenchmark(Convert.ToInt32(subStrings[1]));
                             }                           
                             Console.WriteLine("Ready Benchmark Done");
                             break;

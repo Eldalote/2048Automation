@@ -21,13 +21,13 @@ namespace SearchEngine.Scripts
         public SearchSettings() 
         {
             ThreadedDoubleDepth = false;
-            SearchDepth = 8;
+            SearchDepth = 6;
             SearchToMaxTime = false;
-            SearchTimeMillies = 600;
-            UseIterativeDeepening = true;
-            UseThreading = false;
-            ThreadSplitDepth = 2;
-            MaxDepthIterativeDeepening = 35;
+            SearchTimeMillies = 100;
+            UseIterativeDeepening = false;
+            UseThreading = true;
+            ThreadSplitDepth = 1;
+            MaxDepthIterativeDeepening = 1000;
         }
     }
 }

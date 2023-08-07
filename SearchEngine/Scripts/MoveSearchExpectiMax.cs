@@ -25,6 +25,12 @@ namespace SearchEngine.Scripts
         private SearchSettings _settings;
         private bool _stopSearching;
 
+        public MoveSearchExpectiMax()
+        {
+            _settings = new SearchSettings();
+            _stopSearching = false;
+        }
+
         public MoveSearchExpectiMax(SearchSettings settings)
         {
             _settings = settings;
@@ -40,6 +46,11 @@ namespace SearchEngine.Scripts
             int finalEvaluation;
             MoveDirection bestDirection;
             uint totalNodesSearched;
+            // First check the settings for sense.
+            if (_settings.UseThreading == false)
+            {
+                _settings.ThreadSplitDepth = 0;
+            }
 
             if (_settings.UseIterativeDeepening)
             {
@@ -74,8 +85,7 @@ namespace SearchEngine.Scripts
             int MaxSearchDepth = _settings.SearchToMaxTime ? _settings.MaxDepthIterativeDeepening : _settings.SearchDepth;
             // Do a for loop from 1 to maxSearchDepth
             for (int i = 1; i <= MaxSearchDepth; i++)
-            {
-                Console.WriteLine(i);
+            {                
                 int evaluationThisSearch;
                 uint nodesThisSearch;
                 MoveDirection bestDirectionThisSearch;
@@ -85,7 +95,11 @@ namespace SearchEngine.Scripts
                 // Do a search to depth i. If threaddepth is 0, a normal search without threading is done by the SearchMoveThreadSplit.
                 (evaluationThisSearch, nodesThisSearch, bestDirectionThisSearch) = SearchMoveThreadSplit(threadSplitDepthThisSearch, i, hexBoard, 0, true);
                 // Check if StopSearch is flagged. If it is, the results of this search cannot be trusted, as it was cut of partway, just break the loop.
-                if (_stopSearching) { break; }
+                if (_stopSearching) 
+                {
+                    Console.WriteLine($"Max depth search completed: {i - 1}");
+                    break; 
+                }
                 // If stopsearching is not flagged, update the overall results with the results of the search just done. Then continue with the loop.
                 evaluation = evaluationThisSearch;
                 bestDirection = bestDirectionThisSearch;
@@ -149,11 +163,11 @@ namespace SearchEngine.Scripts
                     
                     if (threadSplitDepth > 1)
                     {
-                        (evaluation, nodesThisSearch, _) = SearchMoveThreadSplit(threadSplitDepth -1, searchDepth -1, hexBoard, score, false);
+                        (evaluation, nodesThisSearch, _) = SearchMoveThreadSplit(threadSplitDepth -1, searchDepth -1, moveOption.BoardResult, moveOption.ScoreResult, false);
                     }
                     else
                     {
-                        (evaluation, nodesThisSearch, _) = SearchMove(searchDepth - 1, hexBoard, score, false);
+                        (evaluation, nodesThisSearch, _) = SearchMove(searchDepth - 1, moveOption.BoardResult, moveOption.ScoreResult, false);
                     }
                     // Keep track of the number of nodes searched.
                     nodesSearched += nodesThisSearch;
@@ -196,11 +210,11 @@ namespace SearchEngine.Scripts
                     // If threadSplitDepth is greater than 1, more splitting is requested at a lower level, so do the searches with threadsplitting, else use normal searches.
                     if (threadSplitDepth > 1)
                     {
-                        (evaluationThisSearch, nodesThisSearch, _) = SearchMoveThreadSplit(threadSplitDepth - 1, searchDepth - 1, hexBoard, score, true);
+                        (evaluationThisSearch, nodesThisSearch, _) = SearchMoveThreadSplit(threadSplitDepth - 1, searchDepth - 1, randomBlockOption, score, true);
                     }
                     else
                     {
-                        (evaluationThisSearch, nodesThisSearch, _) = SearchMove(searchDepth - 1, hexBoard, score, true);
+                        (evaluationThisSearch, nodesThisSearch, _) = SearchMove(searchDepth - 1, randomBlockOption, score, true);
                     }
                     // Keep track of the number of nodes searched and the total for the average evaluation.
                     nodesSearched += nodesThisSearch;
@@ -298,8 +312,7 @@ namespace SearchEngine.Scripts
 
         public void TimeOutSearch()
         {
-            _stopSearching = true;
-            Console.WriteLine("Timeout");
+            _stopSearching = true;            
         }
 
         private struct SearchResult

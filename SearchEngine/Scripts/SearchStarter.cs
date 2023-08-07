@@ -25,13 +25,13 @@ namespace SearchEngine.Scripts
 
         private void ActualStarter(HexBoard board, SearchSettings settings)
         {
-            MoveSearchMiniMax moveSearcher = new MoveSearchMiniMax();
+            MoveSearchExpectiMax moveSearcher = new(settings);
             MoveDirection direction;
             uint nodesSearched;
             int evaluation;
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            (direction, nodesSearched, evaluation) = moveSearcher.StartSearch(board, settings);
+            (evaluation, nodesSearched, direction) = moveSearcher.StartSearch(board, settings);
             stopWatch.Stop();
             TimeSpan timeSpan = stopWatch.Elapsed;
             string resultString = "BestMove " + direction.ToString() + " ";
